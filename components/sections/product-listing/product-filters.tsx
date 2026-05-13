@@ -1,7 +1,7 @@
 "use client";
 
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useState } from "react";
+import { useCallback, useState, useMemo } from "react";
 import { X } from "lucide-react";
 import { Category } from "@/lib/types/product";
 import { Label } from "@/components/ui/label";
@@ -13,21 +13,25 @@ import { cn } from "@/lib/utils";
 
 interface ProductFiltersProps {
   categories: Category[];
+  priceRange: { min: number; max: number };
   onClose?: () => void; // Used for mobile drawer
 }
 
-export function ProductFilters({ categories, onClose }: ProductFiltersProps) {
+export function ProductFilters({ categories, priceRange: globalPriceRange, onClose }: ProductFiltersProps) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
   const [priceRange, setPriceRange] = useState<number[]>([
-    Number(searchParams.get("minPrice")) || 0,
-    Number(searchParams.get("maxPrice")) || 10000,
+    Number(searchParams.get("minPrice")) || globalPriceRange.min,
+    Number(searchParams.get("maxPrice")) || globalPriceRange.max,
   ]);
 
-  const activeCategories = searchParams.get("category")?.split(",") || [];
-  const activeRating = searchParams.get("rating");
+  const activeCategories = useMemo(() => {
+    const cat = searchParams.get("category");
+    if (!cat) return [];
+    return cat.split(",").filter(Boolean);
+  }, [searchParams]);
 
   const createQueryString = useCallback(
     (params: Record<string, string | null>) => {
@@ -74,42 +78,53 @@ export function ProductFilters({ categories, onClose }: ProductFiltersProps) {
     router.push(`${pathname}?${query}`, { scroll: false });
   };
 
-  const handleRatingChange = (rating: string) => {
-    const query = createQueryString({
-      rating: activeRating === rating ? null : rating,
-      page: "1",
-    });
-    router.push(`${pathname}?${query}`, { scroll: false });
-  };
-
   const clearFilters = () => {
     router.push(pathname, { scroll: false });
-    setPriceRange([0, 10000]);
+    setPriceRange([globalPriceRange.min, globalPriceRange.max]);
     if (onClose) onClose();
   };
 
   return (
     <div className="flex flex-col gap-8">
       {/* Categories */}
-      <div className="space-y-4">
-        <h3 className="font-serif text-lg tracking-tight">Categories</h3>
-        <div className="space-y-3">
-          {categories.map((category) => (
-            <div key={category.id} className="flex items-center space-x-3">
-              <Checkbox
-                id={`cat-${category.id}`}
-                checked={activeCategories.includes(category.id)} // Using ID from DB
-                onCheckedChange={(checked) => handleCategoryChange(category.id, checked as boolean)}
-                className="rounded-none border-foreground/20 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
-              />
-              <Label
-                htmlFor={`cat-${category.id}`}
-                className="text-sm font-normal cursor-pointer hover:text-primary transition-colors"
-              >
-                {category.name}
-              </Label>
-            </div>
-          ))}
+      <div className="space-y-6">
+        <h3 className="font-serif text-xl tracking-tight text-primary">Categories</h3>
+        <div className="space-y-6">
+          {categories
+            .filter((cat) => !cat.parentId) // Get parent categories
+            .map((parent) => {
+              const subcategories = categories.filter((sub) => sub.parentId === parent.id);
+              if (subcategories.length === 0) return null;
+
+              return (
+                <div key={parent.id} className="space-y-3">
+                  <h4 className="text-[10px] uppercase tracking-[0.2em] font-bold text-muted-foreground/60 border-b border-foreground/5 pb-2 mb-3">
+                    {parent.name}
+                  </h4>
+                  <div className="space-y-2.5">
+                    {subcategories.map((sub) => (
+                      <div key={sub.id} className="flex items-center space-x-3 group cursor-pointer">
+                        <Checkbox
+                          id={`cat-${sub.slug}`}
+                          checked={activeCategories.includes(sub.slug)}
+                          onCheckedChange={(checked) => handleCategoryChange(sub.slug, checked as boolean)}
+                          className="rounded-none border-foreground/20 data-[state=checked]:bg-primary data-[state=checked]:border-primary transition-colors"
+                        />
+                        <Label
+                          htmlFor={`cat-${sub.slug}`}
+                          className={cn(
+                            "text-sm font-normal cursor-pointer transition-colors group-hover:text-primary",
+                            activeCategories.includes(sub.slug) ? "text-primary font-medium" : "text-muted-foreground"
+                          )}
+                        >
+                          {sub.name}
+                        </Label>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
         </div>
       </div>
 
@@ -124,41 +139,15 @@ export function ProductFilters({ categories, onClose }: ProductFiltersProps) {
           </span>
         </div>
         <Slider
-          defaultValue={[0, 10000]}
-          max={10000}
-          step={100}
+          defaultValue={[globalPriceRange.min, globalPriceRange.max]}
+          min={globalPriceRange.min}
+          max={globalPriceRange.max}
+          step={1}
           value={priceRange}
           onValueChange={handlePriceChange}
           onValueCommit={handlePriceCommit}
           className="py-4"
         />
-      </div>
-
-      <Separator className="bg-foreground/5" />
-
-      {/* Ratings */}
-      <div className="space-y-4">
-        <h3 className="font-serif text-lg tracking-tight">Minimum Rating</h3>
-        <div className="space-y-2">
-          {["4", "3", "2"].map((rating) => (
-            <button
-              key={rating}
-              onClick={() => handleRatingChange(rating)}
-              className={cn(
-                "flex items-center gap-2 w-full text-sm py-1 transition-all hover:translate-x-1",
-                activeRating === rating ? "text-primary font-medium" : "text-muted-foreground"
-              )}
-            >
-              <div className={cn(
-                "w-3 h-3 border border-foreground/20 flex items-center justify-center",
-                activeRating === rating && "bg-primary border-primary"
-              )}>
-                {activeRating === rating && <div className="w-1 h-1 bg-white" />}
-              </div>
-              <span>{rating} Stars & Up</span>
-            </button>
-          ))}
-        </div>
       </div>
 
       <Button

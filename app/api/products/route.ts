@@ -11,6 +11,7 @@ export async function GET(req: Request) {
     const products = await prisma.product.findMany({
       where: {
         isActive: true,
+        deletedAt: null,
         ...(categoryId && { categoryId }),
         ...(search && {
           OR: [

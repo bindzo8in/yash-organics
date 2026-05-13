@@ -5,7 +5,7 @@ import bcrypt from "bcryptjs";
 import { z } from "zod";
 import { signIn } from "@/auth";
 import { AuthError } from "next-auth";
-import { sendPasswordResetEmail } from "@/lib/mail";
+import { sendPasswordResetEmail, sendOtpEmail } from "@/lib/mail";
 import crypto from "crypto";
 
 const RegisterSchema = z.object({
@@ -18,6 +18,8 @@ const RegisterSchema = z.object({
 export type AuthActionState = {
   success?: boolean;
   message?: string;
+  requiresVerification?: boolean;
+  email?: string;
   errors?: {
     name?: string[];
     email?: string[];
@@ -44,18 +46,140 @@ export async function register(prevState: any, formData: FormData): Promise<Auth
     });
 
     if (existingUser) {
-      return { message: "Email or phone already registered." };
+      if (existingUser.isVerified) {
+        return { message: "Email or phone already registered." };
+      } else {
+        // Clear previous unverified attempt to allow fresh start
+        await prisma.user.delete({ where: { id: existingUser.id } });
+      }
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const otpExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
 
-    await prisma.user.create({
-      data: { name, email, phone, password: hashedPassword },
+    await prisma.$transaction(async (tx) => {
+      await tx.user.create({
+        data: { 
+          name, 
+          email, 
+          phone, 
+          password: hashedPassword,
+          isVerified: false,
+          otp,
+          otpExpires,
+        },
+      });
+
+      const mail = await sendOtpEmail(email, otp, name);
+      if (!mail.success) {
+        // Using a specific error prefix to identify email failures
+        throw new Error(`EMAIL_FAILURE: ${mail.error?.message || "Failed to send verification email."}`);
+      }
     });
 
-    return { success: true, message: "Account created successfully. You can now login." };
-  } catch (error) {
+    return { 
+      success: true, 
+      requiresVerification: true,
+      email,
+      message: "Verification code sent to your email." 
+    };
+  } catch (error: any) {
+    console.error("Registration error:", error);
+    
+    if (error.message?.startsWith("EMAIL_FAILURE: ")) {
+      const emailError = error.message.replace("EMAIL_FAILURE: ", "");
+      return { 
+        message: `We couldn't send your verification email. ${emailError}`
+      };
+    }
+
     return { message: "Something went wrong. Please try again." };
+  }
+}
+
+export async function verifyRegistrationOtp(email: string, otp: string): Promise<AuthActionState> {
+  try {
+    const user = await prisma.user.findUnique({
+      where: { email }
+    });
+
+    if (!user) {
+      return { message: "User not found." };
+    }
+
+    if (user.isVerified) {
+      return { message: "User is already verified." };
+    }
+
+    if (!user.otp || !user.otpExpires || user.otpExpires < new Date()) {
+      return { message: "OTP has expired. Please request a new one." };
+    }
+
+    if (user.otp !== otp) {
+      return { message: "Invalid verification code." };
+    }
+
+    await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        isVerified: true,
+        otp: null,
+        otpExpires: null,
+      }
+    });
+
+    return { success: true, message: "Email verified successfully. You can now login." };
+  } catch (error) {
+    console.error("OTP Verification error:", error);
+    return { message: "Something went wrong. Please try again." };
+  }
+}
+
+export async function resendOtp(email: string): Promise<AuthActionState> {
+  try {
+    const user = await prisma.user.findUnique({
+      where: { email }
+    });
+
+    if (!user) {
+      return { message: "User not found." };
+    }
+
+    if (user.isVerified) {
+      return { message: "User is already verified." };
+    }
+
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const otpExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+
+    await prisma.$transaction(async (tx) => {
+      await tx.user.update({
+        where: { id: user.id },
+        data: {
+          otp,
+          otpExpires,
+        }
+      });
+
+      const mail = await sendOtpEmail(email, otp, user.name);
+      if (!mail.success) {
+        throw new Error(`EMAIL_FAILURE: ${mail.error?.message || "Failed to resend verification code."}`);
+      }
+    });
+
+    return { success: true, message: "A new verification code has been sent." };
+  } catch (error: any) {
+    console.error("Resend OTP error:", error);
+    
+    if (error.message?.startsWith("EMAIL_FAILURE: ")) {
+      const emailError = error.message.replace("EMAIL_FAILURE: ", "");
+      return { 
+        message: `Failed to resend code. ${emailError}`
+      };
+    }
+
+    return { message: "Something went wrong." };
   }
 }
 
@@ -76,6 +200,13 @@ export async function login(prevState: any, formData: FormData): Promise<AuthAct
     return { success: true };
   } catch (error) {
     if (error instanceof AuthError) {
+      if (error.cause?.err?.message === "Email not verified") {
+        return { 
+          message: "Please verify your email address before logging in.",
+          requiresVerification: true,
+          email,
+        };
+      }
       switch (error.type) {
         case "CredentialsSignin":
           return { message: "Invalid email or password." };

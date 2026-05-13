@@ -16,6 +16,7 @@ interface ImageUploadProps {
   folder?: string;
   disabled?: boolean;
   multiple?: boolean;
+  onUploading?: (uploading: boolean) => void;
 }
 
 export function ImageUpload({
@@ -27,6 +28,7 @@ export function ImageUpload({
   folder = "general",
   disabled,
   multiple = true,
+  onUploading,
 }: ImageUploadProps) {
   const [isUploading, setIsUploading] = useState(false);
   const [previews, setPreviews] = useState<{ id: string; url: string; uploading: boolean }[]>([]);
@@ -39,6 +41,7 @@ export function ImageUpload({
     const filesToUpload = multiple ? Array.from(files) : [files[0]];
 
     setIsUploading(true);
+    onUploading?.(true);
 
     const uploadPromises = filesToUpload.map(async (file) => {
       // Create local preview
@@ -77,7 +80,8 @@ export function ImageUpload({
 
     await Promise.all(uploadPromises);
     setIsUploading(false);
-  }, [folder, onChange, multiple]);
+    onUploading?.(false);
+  }, [folder, onChange, multiple, onUploading]);
 
   // Determine if we can show the upload button
   const canUpload = !disabled && (multiple || (value.length === 0 && previews.length === 0));

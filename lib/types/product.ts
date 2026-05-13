@@ -31,6 +31,7 @@ export type Category = {
   id: string;
   name: string;
   slug: string;
+  parentId?: string | null;
 };
 
 export type SortOption = "featured" | "price-asc" | "price-desc" | "newest" | "rating";

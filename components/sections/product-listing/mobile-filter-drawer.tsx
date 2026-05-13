@@ -15,9 +15,10 @@ import { Category } from "@/lib/types/product";
 
 interface MobileFilterDrawerProps {
   categories: Category[];
+  priceRange: { min: number; max: number };
 }
 
-export function MobileFilterDrawer({ categories }: MobileFilterDrawerProps) {
+export function MobileFilterDrawer({ categories, priceRange }: MobileFilterDrawerProps) {
   const [open, setOpen] = useState(false);
 
   return (
@@ -37,7 +38,7 @@ export function MobileFilterDrawer({ categories }: MobileFilterDrawerProps) {
           <SheetTitle className="font-serif text-2xl">Filters</SheetTitle>
         </SheetHeader>
         <div className="p-6">
-          <ProductFilters categories={categories} onClose={() => setOpen(false)} />
+          <ProductFilters categories={categories} priceRange={priceRange} onClose={() => setOpen(false)} />
         </div>
       </SheetContent>
     </Sheet>

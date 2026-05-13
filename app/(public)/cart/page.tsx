@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
+import React from "react";
 import { Trash2, Minus, Plus, ArrowRight, ShoppingBag } from "lucide-react";
 import { useCart } from "@/hooks/use-cart";
 import { Button } from "@/components/ui/button";
@@ -11,6 +12,13 @@ import { motion, AnimatePresence } from "motion/react";
 
 export default function CartPage() {
   const { items, removeItem, updateQuantity, totalPrice, totalItems } = useCart();
+  const [isMounted, setIsMounted] = React.useState(false);
+
+  React.useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  if (!isMounted) return null;
 
   if (items.length === 0) {
     return (

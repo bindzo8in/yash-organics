@@ -1,6 +1,7 @@
 import { Resend } from "resend";
 import { ResetPasswordEmail } from "@/emails/reset-password";
 import { OrderConfirmationEmail } from "@/emails/order-confirmation";
+import { VerifyOtpEmail } from "@/emails/verify-otp";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -41,6 +42,30 @@ export const sendOrderConfirmationEmail = async (email: string, name: string, or
     return { success: true };
   } catch (error) {
     console.error("Error sending order confirmation email:", error);
+    return { success: false, error };
+  }
+};
+
+export const sendOtpEmail = async (email: string, otp: string, name: string) => {
+  try {
+    const mail = await resend.emails.send({
+      from: "Yash Organics <onboarding@resend.dev>", // Replace with your verified domain in production
+      to: email,
+      subject: "Verify your email address - Yash Organics",
+      react: VerifyOtpEmail({
+        userFirstname: name,
+        otp,
+      }),
+    });
+
+    if (mail.error) {
+      console.error("Resend error:", mail.error);
+      return { success: false, error: mail.error };
+    }
+
+    return { success: true, error: null };
+  } catch (error: any) {
+    console.error("Error sending OTP email:", error);
     return { success: false, error };
   }
 };

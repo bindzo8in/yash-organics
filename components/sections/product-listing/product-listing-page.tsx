@@ -18,6 +18,7 @@ interface ProductListingPageProps {
   initialTotalCount: number;
   initialTotalPages: number;
   categories: Category[];
+  priceRange: { min: number; max: number };
 }
 
 export function ProductListingPage({
@@ -25,6 +26,7 @@ export function ProductListingPage({
   initialTotalCount,
   initialTotalPages,
   categories,
+  priceRange,
 }: ProductListingPageProps) {
   const router = useRouter();
   const pathname = usePathname();
@@ -47,7 +49,7 @@ export function ProductListingPage({
       />
       {/* Sidebar Filters (Desktop) */}
       <aside className="hidden lg:block w-64 flex-shrink-0 sticky top-24 h-fit">
-        <ProductFilters categories={categories} />
+        <ProductFilters categories={categories} priceRange={priceRange} />
       </aside>
 
       {/* Main Content */}
@@ -58,7 +60,7 @@ export function ProductListingPage({
             <span className="text-sm text-muted-foreground whitespace-nowrap">
               Showing <span className="text-foreground font-medium">{initialTotalCount}</span> products
             </span>
-            <MobileFilterDrawer categories={categories} />
+            <MobileFilterDrawer categories={categories} priceRange={priceRange} />
           </div>
           
           <div className="flex items-center gap-4 w-full sm:w-auto">

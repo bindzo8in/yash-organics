@@ -32,6 +32,11 @@ export default function CheckoutPage() {
   const [scriptLoaded, setScriptLoaded] = useState(false);
   const [deliveryEstimate, setDeliveryEstimate] = useState<DeliveryEstimate | null>(null);
   const [isCheckingDelivery, setIsCheckingDelivery] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   // Load Razorpay Script
   useEffect(() => {
@@ -163,10 +168,14 @@ export default function CheckoutPage() {
     }
   };
 
-  if (items.length === 0) {
-    if (typeof window !== "undefined") router.push("/cart");
-    return null;
-  }
+  useEffect(() => {
+    if (isMounted && items.length === 0) {
+      router.push("/cart");
+    }
+  }, [isMounted, items.length, router]);
+
+  if (!isMounted) return null;
+  if (items.length === 0) return null;
 
   return (
     <div className="min-h-screen bg-[#FDFBF7] pt-32 pb-20 px-6 lg:px-12">

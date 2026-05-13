@@ -16,8 +16,11 @@ interface ProductPageProps {
 
 export async function generateMetadata({ params }: ProductPageProps): Promise<Metadata> {
   const { slug } = await params;
-  const product = await prisma.product.findUnique({
-    where: { slug },
+  const product = await prisma.product.findFirst({
+    where: { 
+      slug,
+      deletedAt: null 
+    },
     select: { name: true, description: true }
   });
 
@@ -36,8 +39,11 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
 
 export default async function ProductPage({ params }: ProductPageProps) {
   const { slug } = await params;
-  const product = await prisma.product.findUnique({
-    where: { slug },
+  const product = await prisma.product.findFirst({
+    where: { 
+      slug,
+      deletedAt: null 
+    },
     include: {
       category: true,
       variants: {

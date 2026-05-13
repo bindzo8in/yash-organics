@@ -332,27 +332,17 @@ export async function deleteProduct(id: string): Promise<ProductActionState> {
       }
     }
 
-    // Check for orders before hard delete
-    const orderCount = await prisma.orderItem.count({ where: { productId: id } });
-
-    if (orderCount > 0) {
-      await prisma.product.update({
-        where: { id },
-        data: { isActive: false }
-      });
-      revalidatePath("/admin/products");
-      return { success: true, message: "Product deactivated (has associated orders)" };
-    }
-
-    await prisma.$transaction([
-      prisma.stockTransaction.deleteMany({ where: { productId: id } }),
-      prisma.productVariant.deleteMany({ where: { productId: id } }),
-      prisma.productImage.deleteMany({ where: { productId: id } }),
-      prisma.product.delete({ where: { id } }),
-    ]);
+    await prisma.product.update({
+      where: { id },
+      data: { 
+        deletedAt: new Date(),
+        isActive: false 
+      }
+    });
 
     revalidatePath("/admin/products");
-    return { success: true, message: "Product deleted" };
+    revalidatePath("/products");
+    return { success: true, message: "Product deleted successfully" };
   } catch (error) {
     console.error("Delete product error:", error);
     return { success: false, message: "Failed to delete product" };

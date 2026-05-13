@@ -43,6 +43,7 @@ export function CategoryForm({ initialData, onSuccess, categories }: CategoryFor
     errors: {},
   };
 
+  const [isUploading, setIsUploading] = useState(false);
   const [state, formAction, isPending] = useActionState(actionWithId, initialState);
 
   const form = useForm<CategorySchema>({
@@ -56,9 +57,12 @@ export function CategoryForm({ initialData, onSuccess, categories }: CategoryFor
     },
   });
 
-
-
   const handleAction = async (formData: FormData) => {
+    if (isUploading) {
+      toast.error("Please wait for image to finish uploading");
+      return;
+    }
+
     const isValid = await form.trigger();
     if (isValid) {
       const image = form.getValues("image");
@@ -128,6 +132,7 @@ export function CategoryForm({ initialData, onSuccess, categories }: CategoryFor
         <FieldContent>
           <ImageUpload
             value={form.watch("image") ? [form.watch("image")] : []}
+            onUploading={setIsUploading}
             onChange={(url) => form.setValue("image", url)}
             onRemove={() => form.setValue("image", "")}
             folder="categories"
@@ -167,10 +172,17 @@ export function CategoryForm({ initialData, onSuccess, categories }: CategoryFor
       <Button
         type="submit"
         className="w-full bg-emerald-600 hover:bg-emerald-700"
-        disabled={isPending}
+        disabled={isPending || isUploading}
       >
-        {isPending ? "Saving..." : initialData ? "Update Category" : "Create Category"}
+        {isPending 
+          ? "Saving..." 
+          : isUploading 
+            ? "Uploading Image..." 
+            : initialData 
+              ? "Update Category" 
+              : "Create Category"}
       </Button>
     </form>
   );
 }
+

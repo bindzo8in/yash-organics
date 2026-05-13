@@ -26,11 +26,12 @@ export async function getProducts(params: {
   // Build Prisma query
   const where: any = {
     isActive: true,
+    deletedAt: null,
     OR: q ? [
       { name: { contains: q, mode: "insensitive" } },
       { description: { contains: q, mode: "insensitive" } },
     ] : undefined,
-    categoryId: category && category.length > 0 ? { in: category } : undefined,
+    category: category && category.length > 0 ? { slug: { in: category } } : undefined,
     variants: {
       some: {
         price: {
@@ -124,7 +125,26 @@ export async function getCategories(): Promise<Category[]> {
       id: true,
       name: true,
       slug: true,
+      parentId: true,
     },
   });
   return categories;
+}
+
+export async function getPriceRange() {
+  const result = await prisma.productVariant.aggregate({
+    where: {
+      product: {
+        isActive: true,
+        deletedAt: null
+      }
+    },
+    _min: { price: true },
+    _max: { price: true }
+  });
+
+  return {
+    min: result._min.price || 0,
+    max: result._max.price || 5000,
+  };
 }

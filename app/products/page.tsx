@@ -2,7 +2,7 @@ import { Metadata } from "next";
 import { ProductListingPage } from "@/components/sections/product-listing/product-listing-page";
 import { ChevronRight, Home } from "lucide-react";
 import Link from "next/link";
-import { getProducts, getCategories } from "@/lib/services/product.service";
+import { getProducts, getCategories, getPriceRange } from "@/lib/services/product.service";
 
 export const metadata: Metadata = {
   title: "Premium Organic Products | YASH Organics",
@@ -15,7 +15,6 @@ interface PageProps {
     category?: string;
     minPrice?: string;
     maxPrice?: string;
-    rating?: string;
     sort?: string;
     page?: string;
   }>;
@@ -26,25 +25,26 @@ export default async function ProductsPage({ searchParams }: PageProps) {
   
   const q = params.q || "";
   const categoriesParam = params.category?.split(",") || [];
-  const minPrice = Number(params.minPrice) || 0;
-  const maxPrice = Number(params.maxPrice) || 10000;
-  const rating = Number(params.rating) || 0;
   const sort = params.sort || "featured";
   const page = Number(params.page) || 1;
 
-  const [{ products, totalCount, totalPages }, categories] = await Promise.all([
-    getProducts({
-      q,
-      category: categoriesParam,
-      minPrice,
-      maxPrice,
-      rating,
-      sort,
-      page,
-      limit: 12,
-    }),
+  const [categories, priceRange] = await Promise.all([
     getCategories(),
+    getPriceRange(),
   ]);
+
+  const minPrice = Number(params.minPrice) || priceRange.min;
+  const maxPrice = Number(params.maxPrice) || priceRange.max;
+
+  const { products, totalCount, totalPages } = await getProducts({
+    q,
+    category: categoriesParam,
+    minPrice,
+    maxPrice,
+    sort,
+    page,
+    limit: 12,
+  });
 
   return (
     <div className="min-h-screen bg-[#FDFBF7]">
@@ -77,6 +77,7 @@ export default async function ProductsPage({ searchParams }: PageProps) {
           initialTotalCount={totalCount}
           initialTotalPages={totalPages}
           categories={categories}
+          priceRange={priceRange}
         />
       </section>
     </div>

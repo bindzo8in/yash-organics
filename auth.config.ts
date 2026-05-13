@@ -9,6 +9,7 @@ export const authConfig = {
       const isLoggedIn = !!auth?.user;
       const isOnAdmin = nextUrl.pathname.startsWith("/admin");
       const isOnProfile = nextUrl.pathname.startsWith("/profile");
+      const isOnCheckout = nextUrl.pathname.startsWith("/checkout");
       
       if (isOnAdmin) {
         if (isLoggedIn) {
@@ -18,7 +19,7 @@ export const authConfig = {
         return false; // Redirect unauthenticated or non-admin users to login page
       }
 
-      if (isOnProfile) {
+      if (isOnProfile || isOnCheckout) {
         if (isLoggedIn) return true;
         return false;
       }

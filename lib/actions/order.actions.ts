@@ -7,6 +7,7 @@ import { revalidatePath } from "next/cache";
 import crypto from "crypto";
 import { checkDeliveryAvailability } from "@/lib/services/delivery.service";
 import { sendOrderConfirmationEmail } from "@/lib/mail";
+import { clearDbCart } from "./cart.actions";
 
 export async function createOrder(data: {
   addressId: string;
@@ -276,6 +277,16 @@ export async function verifyPayment(data: {
             type: "SALE",
             reason: `Order #${existingOrder.id}`,
           },
+        });
+      }
+      
+      // 3.4 Clear User's Database Cart after successful payment
+      const cart = await tx.cart.findFirst({
+        where: { userId }
+      });
+      if (cart) {
+        await tx.cartItem.deleteMany({
+          where: { cartId: cart.id }
         });
       }
 

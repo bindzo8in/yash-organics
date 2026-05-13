@@ -21,6 +21,9 @@ export const metadata: Metadata = {
   description: "Experience the purity of nature with our handcrafted herbal oils, skincare, and premium nutrition.",
 };
 
+import AuthProvider from "@/components/providers/auth-provider";
+import { CartSync } from "@/components/shared/cart-sync";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -32,12 +35,15 @@ export default function RootLayout({
         <link rel="icon" href="/favicon.ico" />
       </head>
       <body className={`${inter.variable} ${tenorSans.variable} min-h-full font-sans`}>
-        <QueryProvider>
-          <TooltipProvider>
-            {children}
-            <SonnerToaster position="top-center" richColors />
-          </TooltipProvider>
-        </QueryProvider>
+        <AuthProvider>
+          <QueryProvider>
+            <TooltipProvider>
+              <CartSync />
+              {children}
+              <SonnerToaster position="top-center" richColors />
+            </TooltipProvider>
+          </QueryProvider>
+        </AuthProvider>
       </body>
     </html>
   );

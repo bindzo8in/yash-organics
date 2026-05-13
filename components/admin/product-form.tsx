@@ -125,6 +125,8 @@ export function ProductForm({
   });
 
 
+  const [isUploading, setIsUploading] = useState(false);
+
   useEffect(() => {
     if (state.success) {
       toast.success(state.message);
@@ -154,6 +156,11 @@ export function ProductForm({
   };
 
   const handleAction = async (formData: FormData) => {
+    if (isUploading) {
+      toast.error("Please wait for images to finish uploading");
+      return;
+    }
+
     const isValid = await form.trigger();
 
     if (!isValid) return;
@@ -302,12 +309,23 @@ export function ProductForm({
                         >
                           <SelectValue placeholder="Select category" />
                         </SelectTrigger>
-                        <SelectContent position="popper" align="start" className="w-[--radix-select-trigger-width] bg-background">
-                          {categories.map((category) => (
-                            <SelectItem key={category.id} value={category.id}>
-                              {category.name}
-                            </SelectItem>
-                          ))}
+                        <SelectContent position="popper" align="start" className="w-[--radix-select-trigger-width] bg-background max-h-[300px]">
+                          {categories
+                            .filter(cat => !cat.parentId) // Get only parents
+                            .map(parent => (
+                              <div key={parent.id}>
+                                <div className="px-2 py-1.5 text-[10px] font-bold uppercase tracking-widest text-muted-foreground/50 bg-muted/20">
+                                  {parent.name}
+                                </div>
+                                {categories
+                                  .filter(sub => sub.parentId === parent.id)
+                                  .map(sub => (
+                                    <SelectItem key={sub.id} value={sub.id} className="pl-4">
+                                      {sub.name}
+                                    </SelectItem>
+                                  ))}
+                              </div>
+                            ))}
                         </SelectContent>
                       </Select>
                     </FieldContent>
@@ -326,6 +344,7 @@ export function ProductForm({
               <FieldContent className="space-y-6">
                 <ImageUpload
                   value={images.map(img => img.url)}
+                  onUploading={setIsUploading}
                   onChange={(url) => {
                     setImages(prev => [...prev, { url, isPrimary: prev.length === 0 }]);
                   }}
@@ -609,7 +628,7 @@ export function ProductForm({
           type="button"
           variant="outline"
           className="w-full sm:w-auto"
-          disabled={isPending}
+          disabled={isPending || isUploading}
           onClick={() => form.reset()}
         >
           Reset
@@ -619,13 +638,15 @@ export function ProductForm({
           type="submit"
           form="product-form"
           className="h-11 w-full bg-emerald-600 text-base hover:bg-emerald-700 sm:w-auto"
-          disabled={isPending}
+          disabled={isPending || isUploading}
         >
           {isPending
             ? "Saving..."
-            : initialData
-              ? "Update Product"
-              : "Create Product"}
+            : isUploading
+              ? "Uploading Images..."
+              : initialData
+                ? "Update Product"
+                : "Create Product"}
         </Button>
       </CardFooter>
     </Card>
