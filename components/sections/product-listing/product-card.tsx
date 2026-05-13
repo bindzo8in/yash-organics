@@ -16,35 +16,17 @@ import { toast } from "sonner";
 
 interface ProductCardProps {
   product: Product;
+  onQuickAdd: (product: Product) => void;
 }
 
-export function ProductCard({ product }: ProductCardProps) {
+export function ProductCard({ product, onQuickAdd }: ProductCardProps) {
   const cart = useCart();
   const isOutOfStock = product.stock <= 0;
   
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
     if (isOutOfStock) return;
-    
-    // Ensure we use the first variant if available for consistency with ProductInfo
-    const firstVariant = (product as any).variants?.[0];
-    
-    const cartProduct = {
-      ...product,
-      price: firstVariant?.price || product.price,
-      variantId: firstVariant?.id,
-      variantName: firstVariant?.name,
-    };
-    
-    cart.addItem(cartProduct as any);
-    
-    toast.success(`${product.name} added to cart`, {
-      description: firstVariant ? `Variant: ${firstVariant.name}` : "Product added successfully.",
-      action: {
-        label: "View Cart",
-        onClick: () => window.location.href = "/cart",
-      },
-    });
+    onQuickAdd(product);
   };
 
   const hasDiscount = product.compareAtPrice && product.compareAtPrice > product.price;

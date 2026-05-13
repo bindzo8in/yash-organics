@@ -24,6 +24,7 @@ export type Product = {
   stock: number;
   isFeatured?: boolean;
   isNew?: boolean;
+  variants?: ProductVariant[];
 };
 
 export type Category = {

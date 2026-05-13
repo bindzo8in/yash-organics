@@ -10,6 +10,8 @@ import { ProductSearch } from "./product-search";
 import { Pagination } from "./pagination";
 import { EmptyProductsState } from "./empty-products-state";
 import { motion, AnimatePresence } from "motion/react";
+import { useState } from "react";
+import { QuickAddModal } from "./quick-add-modal";
 
 interface ProductListingPageProps {
   initialProducts: Product[];
@@ -27,6 +29,7 @@ export function ProductListingPage({
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const [quickAddProduct, setQuickAddProduct] = useState<Product | null>(null);
 
   // Extract page from URL for pagination component
   const page = Number(searchParams.get("page")) || 1;
@@ -37,6 +40,11 @@ export function ProductListingPage({
 
   return (
     <div className="flex flex-col lg:flex-row gap-12 mt-8 lg:mt-12">
+      <QuickAddModal 
+        product={quickAddProduct}
+        isOpen={!!quickAddProduct}
+        onClose={() => setQuickAddProduct(null)}
+      />
       {/* Sidebar Filters (Desktop) */}
       <aside className="hidden lg:block w-64 flex-shrink-0 sticky top-24 h-fit">
         <ProductFilters categories={categories} />
@@ -69,7 +77,10 @@ export function ProductListingPage({
               exit={{ opacity: 0 }}
               transition={{ duration: 0.3 }}
             >
-              <ProductGrid products={initialProducts} />
+              <ProductGrid 
+                products={initialProducts} 
+                onQuickAdd={(product) => setQuickAddProduct(product)}
+              />
               <Pagination totalPages={initialTotalPages} currentPage={page} />
             </motion.div>
           ) : (

@@ -97,6 +97,7 @@ export async function getProducts(params: {
       reviewCount: 12, // Mocked for now
       stock: p.variants.reduce((acc, v) => acc + v.stock, 0),
       isNew: (new Date().getTime() - new Date(p.createdAt).getTime()) < 30 * 24 * 60 * 60 * 1000, // 30 days
+      variants: p.variants,
     };
   });
 
