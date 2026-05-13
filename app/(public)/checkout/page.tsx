@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
+import Script from "next/script";
 import { useCart } from "@/hooks/use-cart";
 import { AddressManager } from "@/components/sections/profile/address-manager";
 import { checkDeliveryAvailability, DeliveryEstimate } from "@/lib/services/delivery.service";
@@ -14,6 +15,7 @@ import { Loader2, ShieldCheck, Truck, CreditCard, ChevronRight } from "lucide-re
 import Image from "next/image";
 import { getAddresses } from "@/lib/actions/address.actions";
 import { cn } from "@/lib/utils";
+import { env } from "@/lib/env";
 
 declare global {
   interface Window {
@@ -33,12 +35,6 @@ export default function CheckoutPage() {
 
   // Load Razorpay Script
   useEffect(() => {
-    const script = document.createElement("script");
-    script.src = "https://checkout.razorpay.com/v1/checkout.js";
-    script.async = true;
-    script.onload = () => setScriptLoaded(true);
-    document.body.appendChild(script);
-
     // Initial load of addresses to get default pincode
     loadAddresses();
   }, []);
@@ -111,13 +107,14 @@ export default function CheckoutPage() {
 
       // 2. Initialize Razorpay
       const options = {
-        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || "rzp_test_id", // Should be public key
+        key: env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
         amount: result.amount,
         currency: result.currency,
         name: "YASH Organics",
         description: "Organic & Herbal Wellness",
         order_id: result.razorpayOrderId,
         handler: async function (response: any) {
+          console.log("Payment Response: ", response);
           // 3. Verify payment on server
           try {
             const verification = await verifyPayment({
@@ -131,8 +128,11 @@ export default function CheckoutPage() {
               toast.success("Payment successful!");
               clearCart();
               router.push(`/order-status/${result.orderId}`);
+            } else {
+              toast.error(verification.error || "Payment verification failed");
             }
           } catch (err: any) {
+            console.error(err)
             toast.error("Payment verification failed. Please contact support.");
           }
         },
@@ -327,6 +327,10 @@ export default function CheckoutPage() {
           </div>
         </div>
       </div>
+      <Script 
+        src="https://checkout.razorpay.com/v1/checkout.js"
+        onReady={() => setScriptLoaded(true)}
+      />
     </div>
   );
 }

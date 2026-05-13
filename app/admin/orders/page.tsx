@@ -21,11 +21,14 @@ const statusMap: Record<string, any> = {
   SHIPPED: { color: "bg-purple-100 text-purple-800", label: "Shipped" },
   DELIVERED: { color: "bg-emerald-100 text-emerald-800", label: "Delivered" },
   CANCELLED: { color: "bg-red-100 text-red-800", label: "Cancelled" },
+  
 };
 
 export default function OrdersPage() {
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
   const [isOpen, setIsOpen] = useState(false);
+
+  const queryClient = useQueryClient();
 
   const { data: orders, isLoading } = useQuery({
     queryKey: ["admin-orders"],
@@ -107,14 +110,17 @@ export default function OrdersPage() {
       )}
 
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
-        <DialogContent className="sm:max-w-[600px]">
-          <DialogHeader>
+        <DialogContent className="sm:max-w-[600px] bg-background">
+          <DialogHeader className="border-b border-gray-500/10">
             <DialogTitle>Order Details</DialogTitle>
           </DialogHeader>
           {selectedOrder && (
             <OrderDetails 
               order={selectedOrder} 
-              onUpdate={() => setIsOpen(false)} 
+              onUpdate={() => {
+                setIsOpen(false);
+                queryClient.invalidateQueries({ queryKey: ["admin-orders"] });
+              }} 
             />
           )}
         </DialogContent>

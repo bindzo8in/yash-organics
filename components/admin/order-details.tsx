@@ -100,6 +100,13 @@ export function OrderDetails({ order, onUpdate }: OrderDetailsProps) {
 
       <form action={formAction} className="space-y-4 bg-neutral-50 p-4 rounded-lg">
         <h4 className="font-semibold text-sm">Fulfillment & Tracking</h4>
+        
+        {order.paymentStatus === "PENDING" && order.orderStatus !== "CANCELLED" && (
+          <div className="bg-amber-100 text-amber-800 p-3 rounded-md text-xs font-medium mb-4">
+            This order is unpaid. Fulfillment options are disabled until payment is successful.
+          </div>
+        )}
+
         <div className="grid grid-cols-2 gap-4">
           <Field>
             <FieldLabel>Order Status</FieldLabel>
@@ -107,12 +114,21 @@ export function OrderDetails({ order, onUpdate }: OrderDetailsProps) {
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="PENDING">Pending</SelectItem>
-                <SelectItem value="CONFIRMED">Confirmed</SelectItem>
-                <SelectItem value="SHIPPED">Shipped</SelectItem>
-                <SelectItem value="DELIVERED">Delivered</SelectItem>
-                <SelectItem value="CANCELLED">Cancelled</SelectItem>
+              <SelectContent position="popper" align="start" className="w-[--radix-select-trigger-width] bg-secondary">
+                {order.paymentStatus === "PENDING" ? (
+                  <>
+                    <SelectItem value="PENDING">Pending Payment</SelectItem>
+                    <SelectItem value="CANCELLED">Cancelled</SelectItem>
+                  </>
+                ) : (
+                  <>
+                    <SelectItem value="CONFIRMED">Confirmed</SelectItem>
+                    <SelectItem value="PROCESSING">Processing</SelectItem>
+                    <SelectItem value="SHIPPED">Shipped</SelectItem>
+                    <SelectItem value="DELIVERED">Delivered</SelectItem>
+                    <SelectItem value="CANCELLED">Cancelled</SelectItem>
+                  </>
+                )}
               </SelectContent>
             </Select>
             <FieldError errors={getErrors("orderStatus")} />
@@ -123,6 +139,7 @@ export function OrderDetails({ order, onUpdate }: OrderDetailsProps) {
               name="courierPartner"
               placeholder="e.g. BlueDart" 
               defaultValue={order.courierPartner || ""} 
+              disabled={order.paymentStatus === "PENDING"}
             />
             <FieldError errors={getErrors("courierPartner")} />
           </Field>
@@ -133,6 +150,7 @@ export function OrderDetails({ order, onUpdate }: OrderDetailsProps) {
             name="trackingId"
             placeholder="Enter tracking number" 
             defaultValue={order.trackingId || ""} 
+            disabled={order.paymentStatus === "PENDING"}
           />
           <FieldError errors={getErrors("trackingId")} />
         </Field>

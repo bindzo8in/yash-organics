@@ -14,14 +14,15 @@ export async function createOrder(data: {
   totalAmount: number;
 }) {
  try {
-   const session = await auth();
-   if (!session?.user?.id) throw new Error("Unauthorized");
+    const session = await auth();
+    const userId = session?.user?.id;
+    if (!userId) throw new Error("Unauthorized");
  
    const { addressId, cartItems, totalAmount } = data;
  
    // 1. Validate Address
    const address = await prisma.address.findUnique({
-     where: { id: addressId, userId: session.user.id },
+     where: { id: addressId, userId: userId },
    });
    if (!address) throw new Error("Invalid address");
  
@@ -66,6 +67,61 @@ export async function createOrder(data: {
    if (!deliveryInfo.isAvailable) throw new Error("Delivery not available for this pincode.");
  
    const finalAmount = serverTotalAmount + deliveryInfo.deliveryCharge;
+  
+    // 3.5 Check for existing pending order with same content to prevent duplicates
+    const existingOrder = await prisma.order.findFirst({
+      where: {
+        userId,
+        addressId: addressId,
+        totalAmount: finalAmount,
+        paymentStatus: "PENDING",
+        orderStatus: "PENDING",
+        createdAt: {
+          gte: new Date(Date.now() - 15 * 60 * 1000), // Only reuse orders from last 15 minutes
+        }
+      },
+      include: {
+        orderItems: true,
+      },
+      orderBy: {
+        createdAt: 'desc'
+      }
+    });
+
+    if (existingOrder && existingOrder.razorpayOrderId) {
+      // Compare items to ensure they are identical
+      const existingItems = existingOrder.orderItems.map(item => ({
+        variantId: item.variantId,
+        quantity: item.quantity
+      })).sort((a, b) => a.variantId.localeCompare(b.variantId));
+
+      const currentItems = validatedItems.map(item => ({
+        variantId: item.variantId,
+        quantity: item.quantity
+      })).sort((a, b) => a.variantId.localeCompare(b.variantId));
+
+      const isSame = JSON.stringify(existingItems) === JSON.stringify(currentItems);
+
+      if (isSame) {
+        // Verify with Razorpay to ensure it's not already paid
+        try {
+          const rzpOrder = await razorpay.orders.fetch(existingOrder.razorpayOrderId);
+          if (rzpOrder.status !== 'paid') {
+            // Safe to reuse
+            return {
+              success: true,
+              orderId: existingOrder.id,
+              razorpayOrderId: existingOrder.razorpayOrderId,
+              amount: Math.round(existingOrder.totalAmount * 100),
+              currency: "INR",
+            };
+          }
+        } catch (error) {
+          console.error("Failed to fetch Razorpay order status:", error);
+          // If fetch fails, fall through to create a new order to be safe
+        }
+      }
+    }
  
    // 4. Create Razorpay Order
    const razorpayOrder = await razorpay.orders.create({
@@ -77,7 +133,7 @@ export async function createOrder(data: {
    // 5. Save Order in DB with PENDING status
    const order = await prisma.order.create({
      data: {
-       userId: session.user.id,
+       userId,
        addressId: addressId,
        // Snapshot address details
        shippingName: address.fullName,
@@ -118,89 +174,141 @@ export async function verifyPayment(data: {
   razorpaySignature: string;
   orderId: string;
 }) {
-  const session = await auth();
-  if (!session?.user?.id) throw new Error("Unauthorized");
+  try {
+    const session = await auth();
+    const userId = session?.user?.id;
+    if (!userId) throw new Error("Unauthorized");
 
-  const { razorpayOrderId, razorpayPaymentId, razorpaySignature, orderId } = data;
+    const { razorpayOrderId, razorpayPaymentId, razorpaySignature, orderId } = data;
+    
+    if (!process.env.RAZORPAY_KEY_SECRET) {
+      throw new Error("Razorpay key secret is missing");
+    }
 
-  // 1. Verify Signature
-  const body = razorpayOrderId + "|" + razorpayPaymentId;
-  const expectedSignature = crypto
-    .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET!)
-    .update(body.toString())
-    .digest("hex");
+    // 1. Verify Razorpay Signature
+    const body = `${razorpayOrderId}|${razorpayPaymentId}`;
+    const expectedSignature = crypto
+      .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
+      .update(body)
+      .digest("hex");
 
-  const isSignatureValid = expectedSignature === razorpaySignature;
+    const isSignatureValid = 
+      expectedSignature.length === razorpaySignature.length &&
+      crypto.timingSafeEqual(
+        Buffer.from(expectedSignature),
+        Buffer.from(razorpaySignature)
+      );
 
-  if (!isSignatureValid) {
-    throw new Error("Invalid payment signature");
-  }
+    if (!isSignatureValid) {
+      throw new Error("Invalid payment signature");
+    }
 
-  // 2. Update Order Status
-  await prisma.$transaction(async (tx) => {
-    const existingOrder = await tx.order.findUnique({
-      where: { id: orderId }
-    });
+    // 2. Fetch payment from Razorpay for extra safety
+    const razorpayPayment = await razorpay.payments.fetch(razorpayPaymentId);
 
-    if (!existingOrder) throw new Error("Order not found");
-    if (existingOrder.paymentStatus === "PAID") return; // Already processed by webhook
+    if (razorpayPayment.status !== "captured") {
+      throw new Error("Payment is not captured");
+    }
 
-    // Update order
-    const order = await tx.order.update({
-      where: { id: orderId },
-      data: {
-        paymentStatus: "PAID",
-        orderStatus: "CONFIRMED",
-        razorpayPaymentId,
-        razorpaySignature,
-      },
-      include: { orderItems: true },
-    });
+    let newlyPaid = false;
 
-    // 3. Update Inventory (Edge Case: Stock update)
-    for (const item of order.orderItems) {
-      const result = await tx.productVariant.updateMany({
+    // 3. Update Order Status in Transaction
+    await prisma.$transaction(async (tx) => {
+      const existingOrder = await tx.order.findFirst({
         where: { 
-          id: item.variantId,
-          stock: { gte: item.quantity } // Prevent negative stock at DB level
+          id: orderId,
+          userId, // Security: Ensure order belongs to user
         },
-        data: {
-          stock: { decrement: item.quantity },
-        },
+        include: { orderItems: true }
       });
 
-      if (result.count === 0) {
-        throw new Error(`Insufficient stock for ${item.productName || 'one of the items'}. Please contact support.`);
+      if (!existingOrder) throw new Error("Order not found");
+      
+      // Security: Verify order matches Razorpay record
+      if (existingOrder.razorpayOrderId !== razorpayOrderId) {
+        throw new Error("Razorpay order mismatch");
       }
 
-      // Record Stock Transaction
-      await tx.stockTransaction.create({
+      const expectedAmountInPaise = Math.round(existingOrder.totalAmount * 100);
+      if (Number(razorpayPayment.amount) !== expectedAmountInPaise) {
+        throw new Error("Payment amount mismatch");
+      }
+
+      if (razorpayPayment.currency !== "INR") {
+        throw new Error("Payment currency mismatch");
+      }
+
+      // Atomic update: only update if it's currently PENDING.
+      // This prevents race conditions where multiple requests try to verify the same payment.
+      const updateResult = await tx.order.updateMany({
+        where: { 
+          id: existingOrder.id,
+          paymentStatus: "PENDING"
+        },
         data: {
-          productId: item.productId,
-          variantId: item.variantId,
-          quantity: -item.quantity,
-          type: "SALE",
-          reason: `Order #${order.id}`,
+          paymentStatus: "PAID",
+          orderStatus: "CONFIRMED",
+          razorpayPaymentId,
+          razorpaySignature,
         },
       });
+
+      // If count is 0, another request already processed this payment.
+      if (updateResult.count === 0) return; 
+
+      // Update Inventory
+      // We do not check for stock >= quantity here because the payment is already captured.
+      // If stock goes negative, it represents a backorder situation that admin must handle.
+      // Throwing an error here would roll back the transaction and leave the order as PENDING.
+      for (const item of existingOrder.orderItems) {
+        await tx.productVariant.update({
+          where: { id: item.variantId },
+          data: {
+            stock: { decrement: item.quantity },
+          },
+        });
+
+        await tx.stockTransaction.create({
+          data: {
+            productId: item.productId,
+            variantId: item.variantId,
+            quantity: -item.quantity,
+            type: "SALE",
+            reason: `Order #${existingOrder.id}`,
+          },
+        });
+      }
+
+      newlyPaid = true;
+    }, {
+      maxWait: 5000, // default is 2000ms
+      timeout: 10000, // default is 5000ms
+    });
+
+    // 4. Send email only once
+    if (newlyPaid) {
+      const orderDetails = await prisma.order.findUnique({
+        where: { id: orderId },
+        include: { user: true },
+      });
+
+      if (orderDetails?.user?.email) {
+        await sendOrderConfirmationEmail(
+          orderDetails.user.email,
+          orderDetails.user.name,
+          orderDetails.id,
+          orderDetails.totalAmount
+        );
+      }
     }
-  });
 
-  // Fetch user to send email
-  const orderDetails = await prisma.order.findUnique({
-    where: { id: orderId },
-    include: { user: true },
-  });
-
-  if (orderDetails?.user?.email) {
-    await sendOrderConfirmationEmail(
-      orderDetails.user.email,
-      orderDetails.user.name,
-      orderDetails.id,
-      orderDetails.totalAmount
-    );
+    revalidatePath("/profile/orders");
+    return { success: true };
+  } catch (error) {
+    console.error("Payment Verification Error:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Payment verification failed",
+    };
   }
-
-  revalidatePath("/profile/orders");
-  return { success: true };
 }
