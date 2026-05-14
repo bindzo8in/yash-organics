@@ -50,13 +50,13 @@ export async function createOrder(data: {
        throw new Error(`Item ${item.name || variant?.product.name} is unavailable or out of stock.`);
      }
  
-     serverTotalAmount += variant.price * item.quantity;
+     serverTotalAmount += variant.sellingPrice * item.quantity;
  
      validatedItems.push({
        productId: variant.productId,
        variantId: variantId,
        quantity: item.quantity,
-       price: variant.price,
+       sellingPrice: variant.sellingPrice,
        productName: variant.product.name,
        variantName: variant.name,
        productImage: variant.product.productImages[0]?.url || null,
@@ -257,10 +257,19 @@ export async function verifyPayment(data: {
       // If count is 0, another request already processed this payment.
       if (updateResult.count === 0) return; 
 
-      // Update Inventory
-      // We do not check for stock >= quantity here because the payment is already captured.
-      // If stock goes negative, it represents a backorder situation that admin must handle.
-      // Throwing an error here would roll back the transaction and leave the order as PENDING.
+      // 3.1 Final Stock Check inside transaction
+      for (const item of existingOrder.orderItems) {
+        const variant = await tx.productVariant.findUnique({
+          where: { id: item.variantId },
+          select: { stock: true, product: { select: { name: true } } }
+        });
+
+        if (!variant || variant.stock < item.quantity) {
+          throw new Error(`Insufficient stock for ${variant?.product.name || 'an item'}. Please contact support for a refund.`);
+        }
+      }
+
+      // 3.2 Update Inventory
       for (const item of existingOrder.orderItems) {
         await tx.productVariant.update({
           where: { id: item.variantId },

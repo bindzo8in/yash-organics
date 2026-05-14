@@ -1,4 +1,5 @@
 import { ResetPasswordForm } from "@/components/auth/reset-password-form";
+import { Suspense } from "react";
 
 export const metadata = {
   title: "New Password | Yash Organics",
@@ -6,5 +7,7 @@ export const metadata = {
 };
 
 export default function ResetPasswordPage() {
-  return <ResetPasswordForm />;
+  return <Suspense fallback={<div>Loading...</div>}>
+    <ResetPasswordForm />
+  </Suspense>;
 }

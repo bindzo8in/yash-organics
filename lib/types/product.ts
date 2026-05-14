@@ -11,8 +11,8 @@ export type Product = {
   name: string;
   slug: string;
   description: string;
-  price: number;
-  compareAtPrice?: number | null;
+  sellingPrice: number;
+  mrp?: number | null;
   image: string;
   category: {
     id: string;
@@ -31,7 +31,11 @@ export type Category = {
   id: string;
   name: string;
   slug: string;
+  description?: string;
+  image?: string;
   parentId?: string | null;
+  productCount?: number;
+  order?: number;
 };
 
 export type SortOption = "featured" | "price-asc" | "price-desc" | "newest" | "rating";

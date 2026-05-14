@@ -12,6 +12,7 @@ const categorySchema = z.object({
   description: z.string().min(5),
   image: z.any().optional(), // Can be string (existing) or File (new)
   parentId: z.string().min(1).optional().nullable(),
+  order: z.coerce.number().int(),
 });
 
 export type CategoryActionState = {
@@ -21,6 +22,7 @@ export type CategoryActionState = {
     description?: string[];
     image?: string[];
     parentId?: string[];
+    order?: string[];
   };
   message: string;
   success?: boolean;
@@ -53,6 +55,7 @@ export async function createCategory(
     description: values.description,
     image: imageUrl,
     parentId: cleanParentId,
+    order: values.order,
   });
 
   if (!validatedFields.success) {
@@ -157,6 +160,7 @@ export async function updateCategory(
     description: values.description,
     image: imageUrl,
     parentId: cleanParentId,
+    order: values.order,
   });
 
   if (!validatedFields.success) {

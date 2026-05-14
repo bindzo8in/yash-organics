@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ShoppingBag, Minus, Plus, Check } from "lucide-react";
-import { motion } from "motion/react";
+import { AnimatePresence, motion } from "motion/react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { useCart } from "@/hooks/use-cart";
@@ -21,8 +21,9 @@ export function ProductInfo({ product }: ProductInfoProps) {
   );
   const [quantity, setQuantity] = useState(1);
   const [isAdding, setIsAdding] = useState(false);
+  const [openSection, setOpenSection] = useState<string | null>("benefits");
 
-  const currentPrice = selectedVariant?.price || 0;
+  const currentPrice = selectedVariant?.sellingPrice || 0;
   const currentMRP = selectedVariant?.mrp;
   const currentStock = selectedVariant?.stock || 0;
   
@@ -39,8 +40,8 @@ export function ProductInfo({ product }: ProductInfoProps) {
       name: product.name,
       slug: product.slug,
       description: product.description,
-      price: currentPrice,
-      compareAtPrice: currentMRP,
+      sellingPrice: currentPrice,
+      mrp: currentMRP,
       image: primaryImage || "/placeholder-product.png",
       category: product.category,
       rating: 4.5,
@@ -65,49 +66,83 @@ export function ProductInfo({ product }: ProductInfoProps) {
     setIsAdding(false);
   };
 
+  const sections = [
+    { id: "benefits", title: "Benefits", content: product.benefits },
+    { id: "ingredients", title: "Key Ingredients", content: product.ingredients },
+    { id: "usage", title: "How to Use", content: product.usage },
+  ].filter(s => s.content);
+
   return (
     <div className="flex flex-col h-full">
-      <div className="flex-1 space-y-8">
-        {/* Header */}
-        <div className="space-y-4">
-          <Badge variant="outline" className="text-[10px] uppercase tracking-widest px-2 py-0.5 rounded-none border-primary/30 text-primary font-bold">
-            {product.category.name}
-          </Badge>
-          <h1 className="text-4xl md:text-5xl font-serif leading-tight">
-            {product.name}
-          </h1>
-          <div className="flex items-baseline gap-4">
-            <span className="text-3xl font-light">₹{currentPrice}</span>
-            {currentMRP && currentMRP > currentPrice && (
-              <>
-                <span className="text-xl text-muted-foreground line-through decoration-1">₹{currentMRP}</span>
-                <span className="text-sm font-bold text-emerald-600">{discount}% OFF</span>
-              </>
+      <div className="flex-1 space-y-10">
+        {/* Header & Badges */}
+        <div className="space-y-6">
+          <div className="flex flex-wrap gap-2">
+            <Badge variant="secondary" className="bg-secondary/50 text-secondary-foreground text-[10px] uppercase tracking-widest px-3 py-1 rounded-sm border-none font-bold">
+              {product.category.name}
+            </Badge>
+            {product.isNew && (
+              <Badge className="bg-accent/10 text-accent text-[10px] uppercase tracking-widest px-3 py-1 rounded-sm border-none font-bold">
+                New Arrival
+              </Badge>
             )}
+            <Badge className="bg-primary/10 text-primary text-[10px] uppercase tracking-widest px-3 py-1 rounded-sm border-none font-bold">
+              Bestseller
+            </Badge>
           </div>
-          {selectedVariant?.weight && (
-            <p className="text-sm text-muted-foreground">
-              Weight: <span className="font-medium text-foreground">{selectedVariant.weight} {selectedVariant.unit}</span>
-            </p>
-          )}
+
+          <div className="space-y-4">
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-serif leading-[1.1] text-foreground tracking-tight">
+              {product.name}
+            </h1>
+            <div className="flex items-center gap-4">
+              <span className="text-3xl font-light text-foreground/90">₹{currentPrice}</span>
+              {currentMRP && currentMRP > currentPrice && (
+                <div className="flex items-center gap-3">
+                  <span className="text-xl text-muted-foreground line-through decoration-1">₹{currentMRP}</span>
+                  <span className="text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-sm">
+                    {discount}% OFF
+                  </span>
+                </div>
+              )}
+            </div>
+          </div>
+
+          <p className="text-muted-foreground text-sm md:text-base leading-relaxed max-w-xl">
+            {product.description}
+          </p>
         </div>
+
+        {/* Quick Features / Key Ingredients (from image) */}
+        {product.ingredients && (
+          <div className="space-y-4 pt-2">
+            <span className="text-[10px] uppercase tracking-[0.2em] font-bold text-muted-foreground/80">Key Ingredients</span>
+            <div className="flex flex-wrap gap-2">
+              {product.ingredients.split(",").slice(0, 3).map((ing: string, i: number) => (
+                <div key={i} className="px-4 py-2 bg-secondary/30 border border-border/50 text-[11px] font-medium rounded-sm">
+                  {ing.trim()}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Variant Selection */}
         {variants.length > 1 && (
           <div className="space-y-4">
-            <span className="text-xs uppercase tracking-widest font-bold">Select Option</span>
+            <span className="text-[10px] uppercase tracking-[0.2em] font-bold text-muted-foreground/80">Select Option</span>
             <div className="flex flex-wrap gap-3">
               {variants.map((v: any) => (
                 <button
                   key={v.id}
                   onClick={() => {
                     setSelectedVariant(v);
-                    setQuantity(1); // Reset quantity on variant change
+                    setQuantity(1);
                   }}
                   className={cn(
-                    "px-6 py-2 border text-sm transition-all duration-300",
+                    "px-6 py-2 border text-[11px] uppercase tracking-widest transition-all duration-300",
                     selectedVariant?.id === v.id
-                      ? "bg-primary border-primary text-white shadow-md scale-105"
+                      ? "bg-primary border-primary text-white shadow-md"
                       : "bg-transparent border-border hover:border-primary"
                   )}
                 >
@@ -118,66 +153,102 @@ export function ProductInfo({ product }: ProductInfoProps) {
           </div>
         )}
 
-        {/* Quantity & Inventory Status */}
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-             <span className="text-xs uppercase tracking-widest font-bold">Quantity</span>
-             <span className={cn(
-               "text-[10px] uppercase font-bold px-2 py-0.5 rounded-sm",
-               currentStock > 10 ? "bg-emerald-50 text-emerald-700" : 
-               currentStock > 0 ? "bg-amber-50 text-amber-700" : "bg-red-50 text-red-700"
-             )}>
-               {currentStock === 0 ? "Out of Stock" : currentStock <= 10 ? "Low Stock" : "In Stock"}
-             </span>
-          </div>
-          
-          <div className="flex items-center gap-4">
-            <div className="flex items-center border border-border h-12">
+        {/* Actions Row (Quantity + Add to Bag matching image) */}
+        <div className="pt-4 space-y-6">
+          <div className="flex flex-col sm:flex-row gap-4">
+            {/* Quantity Selector */}
+            <div className="flex items-center border border-border h-14 bg-secondary/10 px-2">
               <button 
                 onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                className="w-12 h-full flex items-center justify-center hover:bg-secondary/20 transition-colors"
+                className="w-10 h-full flex items-center justify-center hover:text-primary transition-colors disabled:opacity-30"
                 disabled={currentStock === 0}
               >
-                <Minus className="h-4 w-4" />
+                <Minus className="h-3.5 w-3.5" />
               </button>
-              <span className="w-12 text-center font-medium">{quantity}</span>
+              <span className="w-10 text-center font-serif text-lg">{quantity}</span>
               <button 
                 onClick={() => setQuantity(Math.min(currentStock, quantity + 1))}
-                className="w-12 h-full flex items-center justify-center hover:bg-secondary/20 transition-colors"
+                className="w-10 h-full flex items-center justify-center hover:text-primary transition-colors disabled:opacity-30"
                 disabled={currentStock === 0}
               >
-                <Plus className="h-4 w-4" />
+                <Plus className="h-3.5 w-3.5" />
               </button>
+            </div>
+
+            {/* Add to Bag Button */}
+            <Button 
+              onClick={handleAddToCart}
+              disabled={isAdding || currentStock === 0}
+              className="flex-1 h-14 text-sm font-bold bg-primary hover:bg-primary/90 rounded-none shadow-lg transition-all active:scale-[0.98] flex items-center justify-center gap-3"
+            >
+              {isAdding ? (
+                <motion.div 
+                  animate={{ rotate: 360 }} 
+                  transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
+                >
+                  <RefreshCcw className="h-5 w-5" />
+                </motion.div>
+              ) : (
+                <>
+                  <ShoppingBag className="h-4 w-4" />
+                  {currentStock === 0 ? "OUT OF STOCK" : "ADD TO SHOPPING BAG"}
+                </>
+              )}
+            </Button>
+          </div>
+
+          <div className="flex items-center gap-4 text-[10px] text-muted-foreground uppercase tracking-[0.2em] font-medium">
+            <div className="flex items-center gap-2">
+              <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+              Free shipping over ₹999
+            </div>
+            <div className="w-1 h-1 rounded-full bg-border" />
+            <div className="flex items-center gap-2">
+              Secure Payments
             </div>
           </div>
         </div>
       </div>
 
-      {/* Actions */}
-      <div className="mt-12 space-y-4">
-        <Button 
-          onClick={handleAddToCart}
-          disabled={isAdding || currentStock === 0}
-          className="w-full h-16 text-lg font-bold bg-primary hover:bg-primary/90 rounded-none shadow-xl transition-all active:scale-[0.98]"
-        >
-          {isAdding ? (
-            <motion.div 
-              animate={{ rotate: 360 }} 
-              transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
-            >
-              <RefreshCcw className="h-6 w-6" />
-            </motion.div>
-          ) : (
-            <>
-              <ShoppingBag className="mr-3 h-5 w-5" />
-              {currentStock === 0 ? "Out of Stock" : "Add to Shopping Bag"}
-            </>
-          )}
-        </Button>
-        <p className="text-[10px] text-center text-muted-foreground uppercase tracking-widest">
-          Free Shipping on all organic products over ₹999
-        </p>
-      </div>
+      {/* Accordions Section */}
+      {sections.length > 0 && (
+        <div className="mt-16 border-t border-border/50 divide-y divide-border/50">
+          {sections.map((section) => (
+            <div key={section.id} className="py-5">
+              <button 
+                onClick={() => setOpenSection(openSection === section.id ? null : section.id)}
+                className="w-full flex items-center justify-between cursor-pointer group"
+              >
+                <span className={cn(
+                  "text-[11px] uppercase tracking-[0.2em] font-bold transition-colors",
+                  openSection === section.id ? "text-primary" : "text-muted-foreground/60 group-hover:text-primary"
+                )}>
+                  {section.title}
+                </span>
+                <Plus className={cn(
+                  "h-3.5 w-3.5 transition-transform duration-500",
+                  openSection === section.id ? "rotate-45" : "rotate-0"
+                )} />
+              </button>
+              <AnimatePresence initial={false}>
+                {openSection === section.id && (
+                  <motion.div
+                    key="content"
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: "auto", opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.3, ease: [0.04, 0.62, 0.23, 0.98] }}
+                  >
+                    <div className="pt-5 text-[13px] text-muted-foreground leading-relaxed whitespace-pre-line">
+                      {section.content}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

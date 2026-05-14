@@ -104,7 +104,7 @@ export default async function OrdersPage() {
                         </Link>
                         <p className="text-xs text-muted-foreground mt-1">Qty: {item.quantity} | Variant: {item.variant.name}</p>
                       </div>
-                      <div className="text-sm font-medium">₹{(item.price * item.quantity).toLocaleString()}</div>
+                      <div className="text-sm font-medium">₹{(item.sellingPrice * item.quantity).toLocaleString()}</div>
                     </div>
                   ))}
                 </div>

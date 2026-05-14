@@ -3,16 +3,11 @@
 import Image from "next/image";
 import Link from "next/link";
 import { motion } from "motion/react";
-import { ShoppingCart, Heart, Eye } from "lucide-react";
+import { Heart, ShoppingCart } from "lucide-react";
+
 import { Product } from "@/lib/types/product";
 import { PriceDisplay } from "@/components/shared/price-display";
 import { RatingStars } from "@/components/shared/rating-stars";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
-
-import { useCart } from "@/hooks/use-cart";
-import { toast } from "sonner";
 
 interface ProductCardProps {
   product: Product;
@@ -20,116 +15,138 @@ interface ProductCardProps {
 }
 
 export function ProductCard({ product, onQuickAdd }: ProductCardProps) {
-  const cart = useCart();
   const isOutOfStock = product.stock <= 0;
-  
-  const handleAddToCart = (e: React.MouseEvent) => {
+
+  const hasDiscount =
+    product.mrp && product.mrp > product.sellingPrice;
+
+  const discountPercentage = hasDiscount
+    ? Math.round(
+        ((product.mrp! - product.sellingPrice) / product.mrp!) *
+          100
+      )
+    : 0;
+
+  const handleAddToCart = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
+    e.stopPropagation();
+
     if (isOutOfStock) return;
+
     onQuickAdd(product);
   };
 
-  const hasDiscount = product.compareAtPrice && product.compareAtPrice > product.price;
-  const discountPercentage = hasDiscount
-    ? Math.round(((product.compareAtPrice! - product.price) / product.compareAtPrice!) * 100)
-    : 0;
-
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      whileHover={{ y: -5 }}
-      transition={{ duration: 0.3 }}
-      className="group relative flex flex-col h-full bg-background border-none overflow-hidden"
+    <motion.article
+      initial={{ opacity: 0, y: 16 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: "-40px" }}
+      transition={{ duration: 0.35, ease: "easeOut" }}
+      className="group flex h-full flex-col overflow-hidden rounded-2xl border border-border/70 bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
     >
-      {/* Badges */}
-      <div className="absolute top-3 left-3 z-10 flex flex-col gap-2">
-        {product.isNew && (
-          <Badge className="bg-primary text-primary-foreground hover:bg-primary/90 border-none px-2 py-0 text-[10px] uppercase tracking-wider rounded-none">
-            New
-          </Badge>
-        )}
-        {hasDiscount && (
-          <Badge className="bg-accent text-accent-foreground hover:bg-accent/90 border-none px-2 py-0 text-[10px] uppercase tracking-wider rounded-none">
-            -{discountPercentage}%
-          </Badge>
-        )}
-        {isOutOfStock && (
-          <Badge variant="outline" className="bg-background/80 backdrop-blur-sm text-foreground border-foreground/10 px-2 py-0 text-[10px] uppercase tracking-wider rounded-none">
-            Out of Stock
-          </Badge>
-        )}
-      </div>
-
-      {/* Product Image */}
-      <Link href={`/product/${product.slug}`} className="relative aspect-[4/5] overflow-hidden bg-muted">
+      <Link
+        href={`/product/${product.slug}`}
+        className="relative block aspect-[4/4.2] overflow-hidden bg-muted"
+        aria-label={`View ${product.name}`}
+      >
         <Image
           src={product.image}
           alt={product.name}
           fill
-          sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
-          className="object-cover transition-transform duration-700 group-hover:scale-110"
+          sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+          className="object-cover transition-transform duration-500 group-hover:scale-105"
         />
-        
-        {/* Hover Actions */}
-        <div className="absolute inset-0 bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center gap-3">
-          <Button
-            size="icon"
-            variant="secondary"
-            className="rounded-full w-10 h-10 bg-white/90 hover:bg-white text-primary shadow-sm transform translate-y-4 group-hover:translate-y-0 transition-all duration-300 delay-[0ms]"
-            onClick={(e) => {
-              e.preventDefault();
-              // toggleWishlist(product.id)
-            }}
-          >
-            <Heart className="w-4 h-4" />
-          </Button>
-          <Button
-            size="icon"
-            variant="secondary"
-            className="rounded-full w-10 h-10 bg-white/90 hover:bg-white text-primary shadow-sm transform translate-y-4 group-hover:translate-y-0 transition-all duration-300 delay-[50ms]"
-            onClick={(e) => {
-              e.preventDefault();
-              // quickView(product.id)
-            }}
-          >
-            <Eye className="w-4 h-4" />
-          </Button>
+
+        <div className="absolute left-3 top-3 z-10 flex flex-col gap-2">
+          {product.isNew && (
+            <span className="w-fit rounded-full bg-emerald-600 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide text-white shadow-sm">
+              New
+            </span>
+          )}
+
+          {hasDiscount && (
+            <span className="w-fit rounded-full bg-orange-500 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide text-white shadow-sm">
+              {discountPercentage}% Off
+            </span>
+          )}
+
+          {isOutOfStock && (
+            <span className="w-fit rounded-full bg-zinc-900 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide text-white shadow-sm">
+              Out of Stock
+            </span>
+          )}
         </div>
+
+        <button
+          type="button"
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+          }}
+          className="absolute right-3 top-3 z-10 flex size-9 items-center justify-center rounded-full border border-white/70 bg-white/90 text-zinc-700 shadow-sm backdrop-blur transition hover:bg-white hover:text-red-500"
+          aria-label="Add to wishlist"
+        >
+          <Heart className="size-4" />
+        </button>
+
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-black/25 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
       </Link>
 
-      {/* Product Info */}
-      <div className="flex flex-col flex-grow py-4 px-1">
-        <div className="flex items-center justify-between mb-1">
-          <span className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground font-medium">
-            {product.category.name}
+      <div className="flex flex-1 flex-col p-4">
+        <div className="mb-2 flex items-center justify-between gap-3">
+          <span className="line-clamp-1 text-xs font-medium text-emerald-700">
+            {product.category?.name || "Organic Product"}
           </span>
-          <RatingStars rating={product.rating} showCount={false} className="gap-0.5" />
+
+          {typeof product.rating === "number" && (
+            <RatingStars
+              rating={product.rating}
+              showCount={true}
+              className="shrink-0 scale-90"
+            />
+          )}
         </div>
 
-        <Link href={`/product/${product.slug}`} className="hover:text-primary transition-colors">
-          <h3 className="font-serif text-lg leading-tight mb-2 line-clamp-1">{product.name}</h3>
+        <Link href={`/product/${product.slug}`} className="group/title">
+          <h3 className="line-clamp-2 text-base font-semibold leading-snug text-zinc-950 transition-colors group-hover/title:text-emerald-700 sm:text-lg">
+            {product.name}
+          </h3>
         </Link>
-        
-        <p className="text-xs text-muted-foreground line-clamp-2 mb-4 flex-grow">
-          {product.description}
-        </p>
 
-        <div className="flex items-center justify-between mt-auto">
-          <PriceDisplay price={product.price} compareAtPrice={product.compareAtPrice} />
-          
-          <Button
-            size="sm"
-            variant="outline"
-            disabled={isOutOfStock}
-            className="rounded-none border-foreground/20 hover:bg-foreground hover:text-background transition-all duration-300 group/btn"
+        {product.description && (
+          <p className="mt-2 line-clamp-2 text-sm leading-6 text-muted-foreground">
+            {product.description}
+          </p>
+        )}
+
+        <div className="mt-auto flex items-end justify-between gap-3 pt-4">
+          <div className="min-w-0">
+            <PriceDisplay
+              price={product.sellingPrice}
+              compareAtPrice={product.mrp}
+              className="text-lg font-bold text-emerald-900 sm:text-xl"
+            />
+
+            {!isOutOfStock && product.stock <= 5 && (
+              <p className="mt-1 text-xs font-medium text-orange-600">
+                Only {product.stock} left
+              </p>
+            )}
+          </div>
+
+          <button
+            type="button"
             onClick={handleAddToCart}
+            disabled={isOutOfStock}
+            className="inline-flex h-10 shrink-0 items-center justify-center gap-2 rounded-full bg-emerald-700 px-4 text-sm font-semibold text-white transition hover:bg-emerald-800 active:scale-95 disabled:cursor-not-allowed disabled:bg-zinc-300 disabled:text-zinc-500"
           >
-            <ShoppingCart className="w-4 h-4 mr-2 group-hover/btn:scale-110 transition-transform" />
-            <span className="text-[11px] uppercase tracking-wider">Add</span>
-          </Button>
+            <ShoppingCart className="size-4" />
+            <span className="hidden sm:inline">
+              {isOutOfStock ? "Sold" : "Add"}
+            </span>
+          </button>
         </div>
       </div>
-    </motion.div>
+    </motion.article>
   );
 }

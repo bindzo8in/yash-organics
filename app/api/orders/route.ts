@@ -36,7 +36,7 @@ export async function POST(req: Request) {
       const variant = variants.find((v) => v.id === item.variantId);
       if (!variant) throw new Error(`Variant ${item.variantId} not found`);
       
-      const itemPrice = variant.price;
+      const itemPrice = variant.sellingPrice;
       const itemWeight = variant.weight || 0;
 
       subTotal += itemPrice * item.quantity;
@@ -46,7 +46,7 @@ export async function POST(req: Request) {
         productId: item.productId,
         variantId: item.variantId || null,
         quantity: item.quantity,
-        price: itemPrice,
+        sellingPrice: itemPrice,
       };
     });
 

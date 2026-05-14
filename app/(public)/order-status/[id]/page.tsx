@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import Image from "next/image";
 import { PriceDisplay } from "@/components/shared/price-display";
+import { cn } from "@/lib/utils";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -33,20 +34,49 @@ export default async function OrderStatusPage({ params }: PageProps) {
 
   if (!order) notFound();
 
-  const isConfirmed = order.orderStatus !== "CANCELLED";
+  const isPaid = order.paymentStatus === "PAID";
+  const isPending = order.paymentStatus === "PENDING";
+  const isFailed = order.paymentStatus === "FAILED";
 
   return (
     <div className="min-h-screen bg-[#FDFBF7] pt-32 pb-20 px-6 lg:px-12">
       <div className="max-w-4xl mx-auto">
-        {/* Success Header */}
+        {/* Success/Status Header */}
         <div className="text-center mb-12 animate-fade-in">
-          <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-6">
-            <CheckCircle2 className="w-10 h-10 text-primary" />
+          <div className={cn(
+            "w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6",
+            isPaid ? "bg-primary/10" : isPending ? "bg-amber-100" : "bg-destructive/10"
+          )}>
+            {isPaid ? (
+              <CheckCircle2 className="w-10 h-10 text-primary" />
+            ) : isPending ? (
+              <Package className="w-10 h-10 text-amber-600 animate-pulse" />
+            ) : (
+              <Package className="w-10 h-10 text-destructive" />
+            )}
           </div>
-          <h1 className="font-serif text-4xl text-primary mb-2">Order Confirmed!</h1>
+          <h1 className="font-serif text-4xl text-primary mb-2">
+            {isPaid ? "Order Confirmed!" : isPending ? "Order Processing..." : "Payment Unsuccessful"}
+          </h1>
           <p className="text-muted-foreground">
-            Thank you for shopping with YASH. Your order <span className="font-bold text-foreground">#{order.id.slice(-8).toUpperCase()}</span> has been placed successfully.
+            {isPaid ? (
+              <>Thank you for shopping with YASH. Your order <span className="font-bold text-foreground">#{order.id.slice(-8).toUpperCase()}</span> has been placed successfully.</>
+            ) : isPending ? (
+              <>We've received your order <span className="font-bold text-foreground">#{order.id.slice(-8).toUpperCase()}</span> and are waiting for payment confirmation.</>
+            ) : (
+              <>Something went wrong with the payment for order <span className="font-bold text-foreground">#{order.id.slice(-8).toUpperCase()}</span>.</>
+            )}
           </p>
+          
+          {(isPending || isFailed) && (
+            <div className="mt-8 flex justify-center gap-4">
+              <Link href="/checkout">
+                <Button className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-none px-8">
+                  Retry Payment
+                </Button>
+              </Link>
+            </div>
+          )}
         </div>
 
         <div className="grid md:grid-cols-3 gap-8">
@@ -70,7 +100,7 @@ export default async function OrderStatusPage({ params }: PageProps) {
                       <p className="text-xs mt-1">Quantity: {item.quantity}</p>
                     </div>
                     <div className="text-right">
-                      <PriceDisplay price={item.price * item.quantity} className="justify-end text-sm" />
+                      <PriceDisplay price={item.sellingPrice * item.quantity} className="justify-end text-sm" />
                     </div>
                   </div>
                 ))}

@@ -70,6 +70,7 @@ model Category {
   description String
   image       String
   isActive    Boolean  @default(true)
+  order       Int      @default(0)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -92,6 +93,10 @@ model Product {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
+  ingredients String?  @db.Text
+  benefits    String?  @db.Text
+  usage       String?  @db.Text
+
   categoryId String
   // references
   category      Category       @relation(fields: [categoryId], references: [id])
@@ -109,7 +114,7 @@ model ProductVariant {
   product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
   name      String // e.g., "500g", "1kg", "Red", "Small"
   mrp       Float?
-  price     Float
+  sellingPrice Float
   stock     Int      @default(0)
   lowStockLevel Int      @default(5)
   weight    Float?
@@ -154,7 +159,7 @@ model CartItem {
   variantId String
   variant   ProductVariant @relation(fields: [variantId], references: [id])
   quantity  Int      @default(1)
-  price     Float
+  sellingPrice Float
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -223,7 +228,7 @@ model OrderItem {
   productImage String?
 
   quantity  Int
-  price     Float // Price at time of purchase
+  sellingPrice Float // Price at time of purchase
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -245,4 +250,18 @@ model StockTransaction {
 
   product Product         @relation(fields: [productId], references: [id], onDelete: Cascade)
   variant ProductVariant @relation(fields: [variantId], references: [id], onDelete: Cascade)
+}
+
+model HeroSlide {
+  id          String   @id @default(cuid())
+  title       String
+  subtitle    String?
+  description String?
+  image       String
+  link        String?
+  ctaText     String   @default("Shop Now")
+  order       Int      @default(0)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }

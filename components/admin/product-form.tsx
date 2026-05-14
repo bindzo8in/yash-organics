@@ -53,7 +53,7 @@ const variantSchema = z.object({
   id: z.string().optional(),
   name: z.string().min(1, "Variant name is required"),
   mrp: z.coerce.number().min(0).optional(),
-  price: z.coerce.number().min(0, "Price is required"),
+  sellingPrice: z.coerce.number().min(0, "Selling price is required"),
   stock: z.coerce.number().min(0, "Stock is required"),
   lowStockLevel: z.coerce.number().min(0),
   weight: z.coerce.number().min(0).optional(),
@@ -67,6 +67,9 @@ const formSchema = z.object({
     .string()
     .min(10, "Description must be at least 10 characters."),
   categoryId: z.string().min(1, "Category is required."),
+  ingredients: z.string().optional(),
+  benefits: z.string().optional(),
+  usage: z.string().optional(),
   images: z.any().optional(),
   variants: z.array(variantSchema).min(1, "At least one variant is required"),
 });
@@ -110,8 +113,11 @@ export function ProductForm({
           slug: "",
           description: "",
           categoryId: "",
+          ingredients: "",
+          benefits: "",
+          usage: "",
           images: [],
-          variants: [{ name: "Standard", price: 0, stock: 0, lowStockLevel: 5, unit: "kg", weight: 0 }],
+          variants: [{ name: "Standard", sellingPrice: 0, stock: 0, lowStockLevel: 5, unit: "kg", weight: 0 }],
         },
   });
 
@@ -259,7 +265,7 @@ export function ProductForm({
               render={({ field, fieldState }) => (
                 <Field data-invalid={fieldState.invalid}>
                   <FieldLabel htmlFor="product-description">
-                    Description
+                    Short Description
                   </FieldLabel>
 
                   <InputGroup>
@@ -267,26 +273,95 @@ export function ProductForm({
                       {...field}
                       id="product-description"
                       name="description"
-                      placeholder="Write a short product description..."
-                      rows={5}
-                      className="min-h-28 resize-none"
+                      placeholder="Write a short summary for product cards..."
+                      rows={3}
+                      className="min-h-20 resize-none"
                       aria-invalid={fieldState.invalid}
                     />
-                    <InputGroupAddon align="block-end">
-                      <InputGroupText className="tabular-nums">
-                        {field.value?.length || 0} characters
-                      </InputGroupText>
-                    </InputGroupAddon>
                   </InputGroup>
 
                   <FieldDescription>
-                    Add product benefits, ingredients, usage, or important notes.
+                    A brief overview shown in product listings.
                   </FieldDescription>
 
                   <FieldError errors={getErrors("description")} />
                 </Field>
               )}
             />
+
+            <Separator />
+
+            {/* Structured Details */}
+            <div className="space-y-6">
+               <h3 className="text-sm font-bold uppercase tracking-widest text-muted-foreground/70">
+                 Detailed Content (Scalable Sections)
+               </h3>
+               
+               <div className="grid gap-6 md:grid-cols-1">
+                 <Controller
+                   name="benefits"
+                   control={form.control}
+                   render={({ field, fieldState }) => (
+                     <Field data-invalid={fieldState.invalid}>
+                       <FieldLabel htmlFor="product-benefits">Benefits</FieldLabel>
+                       <FieldContent>
+                         <InputGroupTextarea
+                           {...field}
+                           id="product-benefits"
+                           name="benefits"
+                           placeholder="List product benefits (e.g., Hydrates skin, Reduces hair fall...)"
+                           rows={4}
+                           className="min-h-24 resize-none"
+                         />
+                       </FieldContent>
+                       <FieldError errors={getErrors("benefits")} />
+                     </Field>
+                   )}
+                 />
+
+                 <Controller
+                   name="ingredients"
+                   control={form.control}
+                   render={({ field, fieldState }) => (
+                     <Field data-invalid={fieldState.invalid}>
+                       <FieldLabel htmlFor="product-ingredients">Ingredients</FieldLabel>
+                       <FieldContent>
+                         <InputGroupTextarea
+                           {...field}
+                           id="product-ingredients"
+                           name="ingredients"
+                           placeholder="Natural ingredients list..."
+                           rows={4}
+                           className="min-h-24 resize-none"
+                         />
+                       </FieldContent>
+                       <FieldError errors={getErrors("ingredients")} />
+                     </Field>
+                   )}
+                 />
+
+                 <Controller
+                   name="usage"
+                   control={form.control}
+                   render={({ field, fieldState }) => (
+                     <Field data-invalid={fieldState.invalid}>
+                       <FieldLabel htmlFor="product-usage">How to Use</FieldLabel>
+                       <FieldContent>
+                         <InputGroupTextarea
+                           {...field}
+                           id="product-usage"
+                           name="usage"
+                           placeholder="Application instructions..."
+                           rows={4}
+                           className="min-h-24 resize-none"
+                         />
+                       </FieldContent>
+                       <FieldError errors={getErrors("usage")} />
+                     </Field>
+                   )}
+                 />
+               </div>
+            </div>
 
             <div className="grid gap-4 md:grid-cols-1">
               <Controller
@@ -403,7 +478,7 @@ export function ProductForm({
                   size="sm"
                   onClick={() => append({ 
                     name: "", 
-                    price: 0, 
+                    sellingPrice: 0, 
                     stock: 0, 
                     weight: 0, 
                     unit: "kg",
@@ -472,17 +547,17 @@ export function ProductForm({
                       />
 
                       <Controller
-                        name={`variants.${index}.price`}
+                        name={`variants.${index}.sellingPrice`}
                         control={form.control}
                         render={({ field, fieldState }) => (
                           <Field data-invalid={fieldState.invalid}>
-                            <FieldLabel htmlFor={`variant-price-${index}`}>
-                              Price ₹
+                            <FieldLabel htmlFor={`variant-selling-price-${index}`}>
+                              Selling Price ₹
                             </FieldLabel>
                             <FieldContent>
                               <Input
                                 {...field}
-                                id={`variant-price-${index}`}
+                                id={`variant-selling-price-${index}`}
                                 type="number"
                                 min={0}
                                 placeholder="399"
@@ -491,7 +566,7 @@ export function ProductForm({
                               />
                             </FieldContent>
                             <FieldError
-                              errors={getErrors(`variants.${index}.price`)}
+                              errors={getErrors(`variants.${index}.sellingPrice`)}
                             />
                           </Field>
                         )}

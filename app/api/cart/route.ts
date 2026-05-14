@@ -58,7 +58,7 @@ export async function POST(req: Request) {
   }
 
   try {
-    const { productId, variantId, quantity, price } = await req.json();
+    const { productId, variantId, quantity, sellingPrice } = await req.json();
 
     let cart = await prisma.cart.findFirst({
       where: { userId: session.user.id },
@@ -86,7 +86,7 @@ export async function POST(req: Request) {
         where: { id: existingItem.id },
         data: {
           quantity: { increment: quantity },
-          price: price // Update to latest price
+          sellingPrice: sellingPrice // Update to latest price
         },
       });
     } else {
@@ -97,7 +97,7 @@ export async function POST(req: Request) {
           productId,
           variantId: variantId || null,
           quantity,
-          price,
+          sellingPrice,
         },
       });
     }

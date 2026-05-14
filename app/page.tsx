@@ -1,196 +1,109 @@
-"use client";
-
-import Image from "next/image";
-import Link from "next/link";
-import { motion } from "motion/react";
+import { HeroSlider } from "@/components/sections/home/hero-slider";
+import { FeaturedCategories } from "@/components/sections/home/featured-categories";
+import { BestSellers } from "@/components/sections/home/best-sellers";
+import { PromoBanner } from "@/components/sections/home/promo-banner";
+import { NewLaunch } from "@/components/sections/home/new-launch";
+import { Reviews } from "@/components/sections/home/reviews";
+import { CTASection } from "@/components/sections/home/cta-section";
 import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
-import { ArrowRight } from "lucide-react";
+import { getProducts } from "@/lib/services/product.service";
+import { getFeaturedCategories } from "@/lib/services/category.service";
+import * as motion from 'motion/react-client'
+import prisma from "@/lib/prisma";
+import { LeafVector } from "@/components/shared/leaf-vector";
 
-export default function Home() {
+export default async function Home() {
+  const [
+    { products: bestSellers }, 
+    { products: newLaunches },
+    categories,
+    slides
+  ] = await Promise.all([
+    getProducts({ limit: 4, sort: "featured" }),
+    getProducts({ limit: 4, sort: "newest" }),
+    getFeaturedCategories(),
+    prisma.heroSlide.findMany({
+      where: { isActive: true },
+      orderBy: { order: "asc" }
+    })
+  ]);
+
   return (
     <div className="flex flex-col min-h-screen">
       <Navbar />
 
       <main className="flex-1">
-        {/* Hero Section */}
-        <section className="relative h-screen flex items-center justify-center overflow-hidden px-6">
-          <div className="absolute inset-0 z-0">
-            <Image
-              src="/images/organic_hero_background.png"
-              alt="Organic Hero"
-              fill
-              className="object-cover scale-110"
-              priority
-            />
-            <div className="absolute inset-0 bg-black/5" />
-          </div>
+        {/* 1. Slide Section (Hero) */}
+        <HeroSlider slides={slides} />
 
-          <div className="relative z-10 text-center max-w-4xl">
-            <motion.span 
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.2 }}
-              className="text-xs uppercase tracking-[0.4em] mb-6 block text-primary font-bold"
-            >
-              Rooted in Nature
-            </motion.span>
-            <motion.h1 
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 1, delay: 0.4 }}
-              className="text-5xl md:text-8xl font-serif leading-[1.1] mb-10"
-            >
-              Experience the <br /> 
-              <span className="italic">Purity of Earth</span>
-            </motion.h1>
+        {/* 2. Best Selling Products Section */}
+        <BestSellers products={bestSellers} />
+
+        {/* 3. Categories Section */}
+        <FeaturedCategories categories={categories} />
+
+        {/* 4. Banner Section */}
+        <PromoBanner />
+
+        {/* 5. New Launch Section */}
+        <NewLaunch products={newLaunches} />
+
+        {/* 6. Philosophy (Special Highlight) */}
+        <section className="py-48 bg-background relative overflow-hidden">
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-emerald-50/30 rounded-full blur-[120px] pointer-events-none" />
+          
+          <div className="max-w-5xl mx-auto text-center px-6 relative z-10">
             <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 1, delay: 1 }}
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 1.2 }}
+              className="space-y-16"
             >
-              <Link href="/category/hair-care" className="btn-minimal group">
-                Discover Collection
-                <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
-              </Link>
+              <div className="flex flex-col items-center gap-6">
+                <span className="text-[10px] uppercase tracking-[0.6em] font-bold text-emerald-600/60">Our Ethos</span>
+                <div className="w-px h-16 bg-gradient-to-b from-emerald-600/60 to-transparent" />
+              </div>
+
+              <div className="relative">
+                <h3 className="text-4xl md:text-7xl font-serif leading-[1.2] text-foreground tracking-tight">
+                  &quot;Nature does not hurry, yet <br />
+                  <span className="italic text-emerald-800/80">everything is accomplished.</span>&quot;
+                </h3>
+                
+                {/* Decorative floating leaves */}
+                <LeafVector 
+                  src="/leaf/leaf-1.svg"
+                  animate={{ y: [0, -20, 0], rotate: [0, 5, 0] }}
+                  transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+                  className="absolute -top-24 -right-24 md:-right-48 w-48 md:w-96 h-48 md:h-96"
+                />
+                <LeafVector 
+                  src="/leaf/leaf-2.svg"
+                  animate={{ y: [0, 20, 0], rotate: [0, -5, 0] }}
+                  transition={{ duration: 7, repeat: Infinity, ease: "easeInOut", delay: 1 }}
+                  className="absolute -bottom-24 -left-24 md:-left-48 w-48 md:w-96 h-48 md:h-96"
+                />
+              </div>
+
+              <div className="space-y-4">
+                <p className="text-muted-foreground italic font-serif text-2xl">
+                  — Lao Tzu
+                </p>
+                <p className="text-xs uppercase tracking-[0.4em] text-emerald-600/40 font-bold max-w-md mx-auto leading-loose">
+                  Embracing the wisdom of ancient rituals for modern nourishment.
+                </p>
+              </div>
             </motion.div>
           </div>
         </section>
 
-        {/* Categories Section - Immersive Scroll */}
-        <section className="py-32 px-6 bg-background">
-          <div className="max-w-7xl mx-auto space-y-32">
-            
-            {/* Hair Care */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-16 items-center">
-              <motion.div 
-                initial={{ opacity: 0, x: -50 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 1 }}
-                className="relative aspect-[4/5] overflow-hidden"
-              >
-                <Image
-                  src="/images/category_hair_care.png"
-                  alt="Hair Care"
-                  fill
-                  className="object-cover hover:scale-105 transition-transform duration-1000"
-                />
-              </motion.div>
-              <motion.div 
-                initial={{ opacity: 0, y: 50 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 1, delay: 0.2 }}
-                className="space-y-8"
-              >
-                <span className="text-xs uppercase tracking-widest text-primary font-bold">Category 01</span>
-                <h2 className="text-4xl md:text-6xl font-serif">Hair Revitalization</h2>
-                <p className="text-muted-foreground leading-relaxed text-lg">
-                  Handcrafted oils and serums infused with ancient Himalayan herbs. 
-                  Designed to restore strength, shine, and natural balance from root to tip.
-                </p>
-                <Link href="/category/hair-care" className="inline-flex items-center text-sm font-bold uppercase tracking-widest border-b border-foreground pb-1 hover:text-primary hover:border-primary transition-all">
-                  Explore Hair Care
-                </Link>
-              </motion.div>
-            </div>
+        {/* 7. Review Section */}
+        <Reviews />
 
-            {/* Skin Care */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-16 items-center">
-              <motion.div 
-                initial={{ opacity: 0, y: 50 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 1, delay: 0.2 }}
-                className="order-2 md:order-1 space-y-8 text-right md:text-left"
-              >
-                <span className="text-xs uppercase tracking-widest text-primary font-bold">Category 02</span>
-                <h2 className="text-4xl md:text-6xl font-serif">Skin Radiance</h2>
-                <p className="text-muted-foreground leading-relaxed text-lg">
-                  Pure botanical powders and clay masks. No chemicals, just the raw power 
-                  of nature to reveal your skin&apos;s innate glow.
-                </p>
-                <Link href="/category/skin-care" className="inline-flex items-center text-sm font-bold uppercase tracking-widest border-b border-foreground pb-1 hover:text-primary hover:border-primary transition-all">
-                  Explore Skin Care
-                </Link>
-              </motion.div>
-              <motion.div 
-                initial={{ opacity: 0, x: 50 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 1 }}
-                className="order-1 md:order-2 relative aspect-[4/5] overflow-hidden"
-              >
-                <Image
-                  src="/images/category_skin_care.png"
-                  alt="Skin Care"
-                  fill
-                  className="object-cover hover:scale-105 transition-transform duration-1000"
-                />
-              </motion.div>
-            </div>
-
-            {/* Nutrition */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-16 items-center">
-              <motion.div 
-                initial={{ opacity: 0, x: -50 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 1 }}
-                className="relative aspect-[4/5] overflow-hidden"
-              >
-                <Image
-                  src="/images/category_nutrition.png"
-                  alt="Nutrition"
-                  fill
-                  className="object-cover hover:scale-105 transition-transform duration-1000"
-                />
-              </motion.div>
-              <motion.div 
-                initial={{ opacity: 0, y: 50 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 1, delay: 0.2 }}
-                className="space-y-8"
-              >
-                <span className="text-xs uppercase tracking-widest text-primary font-bold">Category 03</span>
-                <h2 className="text-4xl md:text-6xl font-serif">Daily Nutrition</h2>
-                <p className="text-muted-foreground leading-relaxed text-lg">
-                  Premium dry fruits and superfoods sourced from the finest orchards. 
-                  Pure, unadulterated energy for your modern lifestyle.
-                </p>
-                <Link href="/category/nutrition" className="inline-flex items-center text-sm font-bold uppercase tracking-widest border-b border-foreground pb-1 hover:text-primary hover:border-primary transition-all">
-                  Explore Nutrition
-                </Link>
-              </motion.div>
-            </div>
-
-          </div>
-        </section>
-
-        {/* Philosophy Section */}
-        <section className="py-40 bg-secondary/30 text-center px-6">
-          <div className="max-w-3xl mx-auto space-y-10">
-            <motion.h3 
-              initial={{ opacity: 0 }}
-              whileInView={{ opacity: 1 }}
-              viewport={{ once: true }}
-              className="text-3xl md:text-5xl font-serif"
-            >
-              &quot;Nature does not hurry, yet everything is accomplished.&quot;
-            </motion.h3>
-            <motion.p 
-              initial={{ opacity: 0 }}
-              whileInView={{ opacity: 1 }}
-              viewport={{ once: true }}
-              transition={{ delay: 0.3 }}
-              className="text-muted-foreground italic"
-            >
-              — Lao Tzu
-            </motion.p>
-          </div>
-        </section>
+        {/* 8. CTA Section */}
+        <CTASection />
       </main>
 
       <Footer />

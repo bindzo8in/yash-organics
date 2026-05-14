@@ -54,7 +54,7 @@ export async function updateOrderStatus(
           const variant = await tx.productVariant.findUnique({ where: { id: item.variantId } });
           if (!variant) throw new Error(`Variant ${item.variantId} not found`);
 
-          const itemPrice = variant.price;
+          const itemPrice = variant.sellingPrice;
           const itemWeight = variant.weight || 0;
 
           // Every OrderItem in this schema has a variantId

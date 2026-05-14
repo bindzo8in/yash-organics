@@ -42,7 +42,7 @@ export function QuickAddModal({ product, isOpen, onClose }: QuickAddModalProps) 
 
     const cartProduct = {
       ...product,
-      price: currentVariant.price,
+      price: currentVariant.sellingPrice,
       variantId: currentVariant.id,
       variantName: currentVariant.name,
     };
@@ -142,8 +142,8 @@ export function QuickAddModal({ product, isOpen, onClose }: QuickAddModalProps) 
                       Price
                     </label>
                     <PriceDisplay 
-                      price={currentVariant?.price || product.price} 
-                      compareAtPrice={currentVariant?.mrp || product.compareAtPrice} 
+                      price={currentVariant?.sellingPrice || product.sellingPrice} 
+                      compareAtPrice={currentVariant?.mrp || product.mrp} 
                       className="text-2xl"
                     />
                   </div>

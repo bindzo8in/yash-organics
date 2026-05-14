@@ -9,7 +9,7 @@ import { auth } from "@/auth";
 const variantSchema = z.object({
   name: z.string().min(1, "Variant name is required"),
   mrp: z.coerce.number().min(0).optional(),
-  price: z.coerce.number().min(0),
+  sellingPrice: z.coerce.number().min(0),
   stock: z.coerce.number().min(0),
   lowStockLevel: z.coerce.number().min(0),
   weight: z.coerce.number().min(0).optional(),
@@ -21,6 +21,9 @@ const productSchema = z.object({
   slug: z.string().min(2),
   description: z.string().min(10),
   categoryId: z.string().min(1),
+  ingredients: z.string().optional(),
+  benefits: z.string().optional(),
+  usage: z.string().optional(),
   images: z.array(z.object({
     url: z.string().min(1),
     isPrimary: z.boolean(),
@@ -34,6 +37,9 @@ export type ProductActionState = {
     slug?: string[];
     description?: string[];
     categoryId?: string[];
+    ingredients?: string[];
+    benefits?: string[];
+    usage?: string[];
     images?: string[];
     variants?: string[];
   };

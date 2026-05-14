@@ -202,6 +202,12 @@ export default function CheckoutPage() {
                   loadAddresses(); // Refresh addresses list
                 }} 
               />
+              {!selectedAddressId && (
+                <div className="mt-4 p-4 border border-amber-200 bg-amber-50 text-amber-800 text-sm flex items-center gap-3">
+                  <div className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
+                  Please select or add a delivery address to proceed.
+                </div>
+              )}
             </section>
 
             {/* 2. Delivery Options */}
@@ -264,7 +270,7 @@ export default function CheckoutPage() {
                       <p className="text-xs mt-2">Qty: {item.quantity}</p>
                     </div>
                     <div className="text-sm font-medium">
-                      ₹{(item.price * item.quantity).toLocaleString()}
+                      ₹{(item.sellingPrice * item.quantity).toLocaleString()}
                     </div>
                   </div>
                 ))}
@@ -304,11 +310,15 @@ export default function CheckoutPage() {
               <div className="mt-10 space-y-4">
                 <Button 
                   onClick={handleCheckout}
-                  disabled={loading || !scriptLoaded || !deliveryEstimate?.isAvailable}
+                  disabled={loading || !scriptLoaded || !deliveryEstimate?.isAvailable || !selectedAddressId}
                   className="w-full rounded-none py-8 bg-primary hover:bg-primary/90 text-primary-foreground group relative overflow-hidden"
                 >
                   {loading ? (
                     <Loader2 className="w-5 h-5 animate-spin" />
+                  ) : !selectedAddressId ? (
+                    "Select Address to Pay"
+                  ) : !deliveryEstimate?.isAvailable ? (
+                    "Delivery Not Available"
                   ) : (
                     <>
                       <CreditCard className="w-5 h-5 mr-3" />

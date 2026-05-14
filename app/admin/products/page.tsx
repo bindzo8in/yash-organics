@@ -148,7 +148,7 @@ export default function ProductsPage() {
         
         if (variants.length === 0) return <span className="text-sm text-muted-foreground italic">N/A</span>;
 
-        const prices = variants.map((v: any) => v.price);
+        const prices = variants.map((v: any) => v.sellingPrice);
         const min = Math.min(...prices);
         const max = Math.max(...prices);
 

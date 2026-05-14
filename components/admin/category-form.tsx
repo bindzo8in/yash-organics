@@ -54,6 +54,7 @@ export function CategoryForm({ initialData, onSuccess, categories }: CategoryFor
       description: "",
       image: undefined,
       parentId: null,
+      order: 0,
     },
   });
 
@@ -141,6 +142,14 @@ export function CategoryForm({ initialData, onSuccess, categories }: CategoryFor
           />
         </FieldContent>
         <FieldError errors={getErrors("image")} />
+      </Field>
+      
+      <Field>
+        <FieldLabel htmlFor="order">Display Order</FieldLabel>
+        <FieldContent>
+          <Input id="order" type="number" {...form.register("order")} placeholder="0" />
+        </FieldContent>
+        <FieldError errors={getErrors("order")} />
       </Field>
 
       {!initialData?.parentId && (

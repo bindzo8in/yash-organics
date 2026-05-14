@@ -17,12 +17,12 @@ export function PriceDisplay({
 
   return (
     <div className={cn("flex items-baseline gap-2", className)}>
-      <span className="text-lg font-semibold text-primary">
+      <span className="text-lg font-bold text-primary">
         {currency}
         {price.toLocaleString()}
       </span>
       {hasDiscount && (
-        <span className="text-sm text-muted-foreground line-through decoration-muted-foreground/50">
+        <span className="text-sm text-muted-foreground line-through decoration-muted-foreground/50 font-medium">
           {currency}
           {compareAtPrice.toLocaleString()}
         </span>

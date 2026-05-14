@@ -1,5 +1,7 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
+import { syncCartWithDb } from "@/lib/actions/cart.actions";
+import { toast } from "sonner";
 import { Product } from "@/lib/types/product";
 
 export interface CartItem extends Product {
@@ -15,6 +17,7 @@ interface CartStore {
   updateQuantity: (productId: string, quantity: number, variantId?: string) => void;
   clearCart: () => void;
   setItems: (items: CartItem[]) => void;
+  syncWithDb: () => Promise<void>;
   totalItems: () => number;
   totalPrice: () => number;
 }
@@ -67,12 +70,26 @@ export const useCart = create<CartStore>()(
       clearCart: () => set({ items: [] }),
       setItems: (items: CartItem[]) => set({ items }),
 
+      syncWithDb: async () => {
+        const items = get().items;
+        const result = await syncCartWithDb(items.map(i => ({
+          id: i.id,
+          variantId: i.variantId || "",
+          quantity: i.quantity,
+          sellingPrice: i.sellingPrice
+        })));
+
+        if (!result.success && result.error !== "Unauthorized") {
+          console.error("Cart sync failed:", result.error);
+        }
+      },
+
       totalItems: () => {
         return get().items.reduce((total, item) => total + item.quantity, 0);
       },
 
       totalPrice: () => {
-        return get().items.reduce((total, item) => total + item.price * item.quantity, 0);
+        return get().items.reduce((total, item) => total + item.sellingPrice * item.quantity, 0);
       },
     }),
     {

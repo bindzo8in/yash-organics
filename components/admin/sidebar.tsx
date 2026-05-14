@@ -8,6 +8,7 @@ import {
   Users,
   Settings,
   Package,
+  SlidersHorizontal,
 } from "lucide-react";
 
 import {
@@ -51,6 +52,11 @@ const items = [
     url: "/admin/customers",
     icon: Users,
   },
+  {
+    title: "Hero Slides",
+    url: "/admin/hero-slides",
+    icon: SlidersHorizontal
+  }
 ];
 
 export function AdminSidebar() {

@@ -2,6 +2,8 @@ import { Metadata } from "next";
 import { ProductListingPage } from "@/components/sections/product-listing/product-listing-page";
 import { ChevronRight, Home } from "lucide-react";
 import Link from "next/link";
+import { Navbar } from "@/components/layout/navbar";
+import { Footer } from "@/components/layout/footer";
 import { getProducts, getCategories, getPriceRange } from "@/lib/services/product.service";
 
 export const metadata: Metadata = {
@@ -17,6 +19,7 @@ interface PageProps {
     maxPrice?: string;
     sort?: string;
     page?: string;
+    availability?: string;
   }>;
 }
 
@@ -25,6 +28,7 @@ export default async function ProductsPage({ searchParams }: PageProps) {
   
   const q = params.q || "";
   const categoriesParam = params.category?.split(",") || [];
+  const availabilityParam = params.availability?.split(",") || [];
   const sort = params.sort || "featured";
   const page = Number(params.page) || 1;
 
@@ -41,6 +45,7 @@ export default async function ProductsPage({ searchParams }: PageProps) {
     category: categoriesParam,
     minPrice,
     maxPrice,
+    availability: availabilityParam,
     sort,
     page,
     limit: 12,
@@ -48,6 +53,8 @@ export default async function ProductsPage({ searchParams }: PageProps) {
 
   return (
     <div className="min-h-screen bg-[#FDFBF7]">
+      <Navbar />
+      
       {/* Hero Section */}
       <section className="bg-[#F6F1EB] pt-32 pb-20 px-6 lg:px-12 text-center">
         <div className="max-w-4xl mx-auto">
@@ -80,6 +87,8 @@ export default async function ProductsPage({ searchParams }: PageProps) {
           priceRange={priceRange}
         />
       </section>
+
+      <Footer />
     </div>
   );
 }

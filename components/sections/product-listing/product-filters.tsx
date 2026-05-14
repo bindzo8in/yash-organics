@@ -33,6 +33,12 @@ export function ProductFilters({ categories, priceRange: globalPriceRange, onClo
     return cat.split(",").filter(Boolean);
   }, [searchParams]);
 
+  const activeAvailability = useMemo(() => {
+    const avail = searchParams.get("availability");
+    if (!avail) return [];
+    return avail.split(",").filter(Boolean);
+  }, [searchParams]);
+
   const createQueryString = useCallback(
     (params: Record<string, string | null>) => {
       const newParams = new URLSearchParams(searchParams.toString());
@@ -60,6 +66,21 @@ export function ProductFilters({ categories, priceRange: globalPriceRange, onClo
 
     const query = createQueryString({
       category: newCategories.length > 0 ? newCategories.join(",") : null,
+      page: "1",
+    });
+    router.push(`${pathname}?${query}`, { scroll: false });
+  };
+
+  const handleAvailabilityChange = (value: string, checked: boolean) => {
+    let newAvailability = [...activeAvailability];
+    if (checked) {
+      newAvailability.push(value);
+    } else {
+      newAvailability = newAvailability.filter((a) => a !== value);
+    }
+
+    const query = createQueryString({
+      availability: newAvailability.length > 0 ? newAvailability.join(",") : null,
       page: "1",
     });
     router.push(`${pathname}?${query}`, { scroll: false });
@@ -94,13 +115,26 @@ export function ProductFilters({ categories, priceRange: globalPriceRange, onClo
             .filter((cat) => !cat.parentId) // Get parent categories
             .map((parent) => {
               const subcategories = categories.filter((sub) => sub.parentId === parent.id);
-              if (subcategories.length === 0) return null;
 
               return (
                 <div key={parent.id} className="space-y-3">
-                  <h4 className="text-[10px] uppercase tracking-[0.2em] font-bold text-muted-foreground/60 border-b border-foreground/5 pb-2 mb-3">
-                    {parent.name}
-                  </h4>
+                  <div className="flex items-center justify-between border-b border-foreground/5 pb-2 mb-3">
+                    <Label
+                      htmlFor={`cat-${parent.slug}`}
+                      className={cn(
+                        "text-[10px] uppercase tracking-[0.2em] font-bold cursor-pointer transition-colors hover:text-primary",
+                        activeCategories.includes(parent.slug) ? "text-primary" : "text-muted-foreground/60"
+                      )}
+                    >
+                      {parent.name}
+                    </Label>
+                    <Checkbox
+                      id={`cat-${parent.slug}`}
+                      checked={activeCategories.includes(parent.slug)}
+                      onCheckedChange={(checked) => handleCategoryChange(parent.slug, checked as boolean)}
+                      className="h-3.5 w-3.5 rounded-none border-foreground/20 data-[state=checked]:bg-primary data-[state=checked]:border-primary transition-colors"
+                    />
+                  </div>
                   <div className="space-y-2.5">
                     {subcategories.map((sub) => (
                       <div key={sub.id} className="flex items-center space-x-3 group cursor-pointer">
@@ -125,6 +159,49 @@ export function ProductFilters({ categories, priceRange: globalPriceRange, onClo
                 </div>
               );
             })}
+        </div>
+      </div>
+
+      <Separator className="bg-foreground/5" />
+
+      {/* Availability */}
+      <div className="space-y-4">
+        <h3 className="font-serif text-xl tracking-tight text-primary">Availability</h3>
+        <div className="space-y-3">
+          <div className="flex items-center space-x-3 group cursor-pointer">
+            <Checkbox
+              id="avail-in-stock"
+              checked={activeAvailability.includes("in-stock")}
+              onCheckedChange={(checked) => handleAvailabilityChange("in-stock", checked as boolean)}
+              className="rounded-none border-foreground/20 data-[state=checked]:bg-primary data-[state=checked]:border-primary transition-colors"
+            />
+            <Label
+              htmlFor="avail-in-stock"
+              className={cn(
+                "text-sm font-normal cursor-pointer transition-colors group-hover:text-primary",
+                activeAvailability.includes("in-stock") ? "text-primary font-medium" : "text-muted-foreground"
+              )}
+            >
+              In Stock
+            </Label>
+          </div>
+          <div className="flex items-center space-x-3 group cursor-pointer">
+            <Checkbox
+              id="avail-out-of-stock"
+              checked={activeAvailability.includes("out-of-stock")}
+              onCheckedChange={(checked) => handleAvailabilityChange("out-of-stock", checked as boolean)}
+              className="rounded-none border-foreground/20 data-[state=checked]:bg-primary data-[state=checked]:border-primary transition-colors"
+            />
+            <Label
+              htmlFor="avail-out-of-stock"
+              className={cn(
+                "text-sm font-normal cursor-pointer transition-colors group-hover:text-primary",
+                activeAvailability.includes("out-of-stock") ? "text-primary font-medium" : "text-muted-foreground"
+              )}
+            >
+              Out of Stock
+            </Label>
+          </div>
         </div>
       </div>
 

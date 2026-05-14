@@ -8,7 +8,7 @@ export type CartItemInput = {
   id: string; // This is productId
   variantId: string;
   quantity: number;
-  price: number;
+  sellingPrice: number;
 };
 
 export async function getDbCart() {
@@ -43,7 +43,7 @@ export async function getDbCart() {
     slug: item.product.slug,
     image: item.product.productImages[0]?.url || "",
     category: item.product.category,
-    price: item.price,
+    sellingPrice: item.sellingPrice,
     quantity: item.quantity,
     variantId: item.variantId,
     variantName: item.variant.name
@@ -57,16 +57,24 @@ export async function syncCartWithDb(items: CartItemInput[]) {
 
     const userId = session.user.id;
 
+
+
     // Use a transaction to ensure atomicity
     await prisma.$transaction(async (tx) => {
+      // 0. Get the user from db
+      const user = await tx.user.findUnique({
+        where: { id: userId },
+        select: { id: true }
+      })
+      if(!user) return { success: false, error: "User not found" };
       // 1. Get or create cart
       let cart = await tx.cart.findFirst({
-        where: { userId }
+        where: { userId: user.id }
       });
 
       if (!cart) {
         cart = await tx.cart.create({
-          data: { userId }
+          data: { userId: user.id }
         });
       }
 
@@ -94,14 +102,14 @@ export async function syncCartWithDb(items: CartItemInput[]) {
           },
           update: {
             quantity: item.quantity,
-            price: item.price
+            sellingPrice: item.sellingPrice
           },
           create: {
             cartId: cart.id,
             productId: item.id,
             variantId: item.variantId,
             quantity: item.quantity,
-            price: item.price
+            sellingPrice: item.sellingPrice
           }
         });
       }
@@ -129,8 +137,15 @@ export async function clearDbCart() {
   const session = await auth();
   if (!session?.user?.id) return;
 
+  const user = await prisma.user.findUnique({
+    where: { id: session.user.id },
+    select: { id: true }
+  });
+  if(!user) return;
+
   const cart = await prisma.cart.findFirst({
-    where: { userId: session.user.id }
+    where: { userId: user.id },
+    select: { id: true }
   });
 
   if (cart) {

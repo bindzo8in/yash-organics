@@ -115,7 +115,7 @@ export default function CartPage() {
                   </div>
 
                   <div className="col-span-3 text-right">
-                    <PriceDisplay price={item.price * item.quantity} className="justify-end" />
+                    <PriceDisplay price={item.sellingPrice * item.quantity} className="justify-end" />
                   </div>
                 </motion.div>
               ))}

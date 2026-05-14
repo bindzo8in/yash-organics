@@ -7,6 +7,7 @@ export async function getProducts(params: {
   minPrice?: number;
   maxPrice?: number;
   rating?: number;
+  availability?: string[];
   sort?: string;
   page?: number;
   limit?: number;
@@ -16,12 +17,28 @@ export async function getProducts(params: {
     category,
     minPrice = 0,
     maxPrice = 10000,
+    availability,
     sort = "featured",
     page = 1,
     limit = 12,
   } = params;
 
   const skip = (page - 1) * limit;
+
+  // Find all category IDs (including subcategories if a parent slug is provided)
+  let categoryIds: string[] | undefined = undefined;
+  if (category && category.length > 0) {
+    const matchingCategories = await prisma.category.findMany({
+      where: {
+        OR: [
+          { slug: { in: category } },
+          { parent: { slug: { in: category } } }
+        ]
+      },
+      select: { id: true }
+    });
+    categoryIds = matchingCategories.map(c => c.id);
+  }
 
   // Build Prisma query
   const where: any = {
@@ -31,27 +48,40 @@ export async function getProducts(params: {
       { name: { contains: q, mode: "insensitive" } },
       { description: { contains: q, mode: "insensitive" } },
     ] : undefined,
-    category: category && category.length > 0 ? { slug: { in: category } } : undefined,
-    variants: {
-      some: {
-        price: {
-          gte: minPrice,
-          lte: maxPrice,
-        },
+  };
+
+  if (categoryIds && categoryIds.length > 0) {
+    where.categoryId = { in: categoryIds };
+  } else if (category && category.length > 0) {
+    // If category slugs were provided but no IDs found, force return no results
+    // unless you want to ignore invalid categories. Usually, we want no results.
+    where.categoryId = { in: [] };
+  }
+
+  // Add variant filters (Price & Availability)
+  where.variants = {
+    some: {
+      sellingPrice: {
+        gte: isNaN(minPrice) ? 0 : minPrice,
+        lte: isNaN(maxPrice) ? 1000000 : maxPrice,
       },
+      ...(availability?.includes("in-stock") && !availability?.includes("out-of-stock") && {
+        stock: { gt: 0 }
+      })
     },
+    ...(availability?.includes("out-of-stock") && !availability?.includes("in-stock") && {
+      every: { stock: 0 }
+    })
   };
 
   // Sorting
   let orderBy: any = {};
   switch (sort) {
     case "price-asc":
-      orderBy = { variants: { _count: "asc" } }; // This is tricky in Prisma for variants
-      // For simplicity in listing, we might sort by the first variant's price if we had it directly
-      // But Prisma doesn't easily sort by children's min value in one go without aggregation
-      // For now, let's just use simple ordering and handle price sort if possible
+      orderBy = { variants: { _min: { sellingPrice: "asc" } } };
       break;
     case "price-desc":
+      orderBy = { variants: { _min: { sellingPrice: "desc" } } };
       break;
     case "newest":
       orderBy = { createdAt: "desc" };
@@ -71,7 +101,7 @@ export async function getProducts(params: {
       },
       skip,
       take: limit,
-      orderBy: sort === "newest" ? { createdAt: "desc" } : { name: "asc" },
+      orderBy,
     }),
     prisma.product.count({ where }),
   ]);
@@ -86,8 +116,8 @@ export async function getProducts(params: {
       name: p.name,
       slug: p.slug,
       description: p.description,
-      price: baseVariant?.price || 0,
-      compareAtPrice: baseVariant?.mrp || null,
+      sellingPrice: baseVariant?.sellingPrice || 0,
+      mrp: baseVariant?.mrp || null,
       image: primaryImage?.url || "/placeholder-product.png",
       category: {
         id: p.category.id,
@@ -102,12 +132,8 @@ export async function getProducts(params: {
     };
   });
 
-  // Manual sorting for price if needed (Prisma 5.x+ has some improvements but let's be safe)
-  if (sort === "price-asc") {
-    mappedProducts.sort((a, b) => a.price - b.price);
-  } else if (sort === "price-desc") {
-    mappedProducts.sort((a, b) => b.price - a.price);
-  } else if (sort === "rating") {
+  // Manual sorting for rating if needed (since it's mocked for now)
+  if (sort === "rating") {
     mappedProducts.sort((a, b) => b.rating - a.rating);
   }
 
@@ -139,12 +165,12 @@ export async function getPriceRange() {
         deletedAt: null
       }
     },
-    _min: { price: true },
-    _max: { price: true }
+    _min: { sellingPrice: true },
+    _max: { sellingPrice: true }
   });
 
   return {
-    min: result._min.price || 0,
-    max: result._max.price || 5000,
+    min: result._min.sellingPrice || 0,
+    max: result._max.sellingPrice || 5000,
   };
 }
