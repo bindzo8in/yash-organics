@@ -98,12 +98,14 @@ export function OrderDetails({ order, onUpdate }: OrderDetailsProps) {
 
       <Separator />
 
-      <form action={formAction} className="space-y-4 bg-neutral-50 p-4 rounded-lg">
-        <h4 className="font-semibold text-sm">Fulfillment & Tracking</h4>
+      <form action={formAction} className="space-y-4 bg-neutral-50 p-6 rounded-xl border border-neutral-200">
+        <h4 className="font-semibold text-sm flex items-center gap-2">
+          <Truck className="h-4 w-4 text-primary" /> Fulfillment & Status
+        </h4>
         
         {order.paymentStatus === "PENDING" && order.orderStatus !== "CANCELLED" && (
-          <div className="bg-amber-100 text-amber-800 p-3 rounded-md text-xs font-medium mb-4">
-            This order is unpaid. Fulfillment options are disabled until payment is successful.
+          <div className="bg-amber-50 border border-amber-200 text-amber-800 p-3 rounded-lg text-xs font-medium mb-4">
+            Order is currently unpaid. Ensure payment is received before shipping.
           </div>
         )}
 
@@ -111,10 +113,10 @@ export function OrderDetails({ order, onUpdate }: OrderDetailsProps) {
           <Field>
             <FieldLabel>Order Status</FieldLabel>
             <Select name="orderStatus" defaultValue={order.orderStatus}>
-              <SelectTrigger>
+              <SelectTrigger className="bg-white">
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent position="popper" align="start" className="w-[--radix-select-trigger-width] bg-secondary">
+              <SelectContent position="popper" align="start" className="w-[--radix-select-trigger-width] bg-white border-neutral-200 shadow-xl">
                 {order.paymentStatus === "PENDING" ? (
                   <>
                     <SelectItem value="PENDING">Pending Payment</SelectItem>
@@ -126,6 +128,8 @@ export function OrderDetails({ order, onUpdate }: OrderDetailsProps) {
                     <SelectItem value="PROCESSING">Processing</SelectItem>
                     <SelectItem value="SHIPPED">Shipped</SelectItem>
                     <SelectItem value="DELIVERED">Delivered</SelectItem>
+                    <SelectItem value="RETURNED">Returned</SelectItem>
+                    <SelectItem value="REFUNDED">Refunded</SelectItem>
                     <SelectItem value="CANCELLED">Cancelled</SelectItem>
                   </>
                 )}
@@ -133,33 +137,63 @@ export function OrderDetails({ order, onUpdate }: OrderDetailsProps) {
             </Select>
             <FieldError errors={getErrors("orderStatus")} />
           </Field>
+          
+          <Field>
+            <FieldLabel>Payment Status</FieldLabel>
+            <Select name="paymentStatus" defaultValue={order.paymentStatus}>
+              <SelectTrigger className="bg-white">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent position="popper" align="start" className="w-[--radix-select-trigger-width] bg-white border-neutral-200 shadow-xl">
+                <SelectItem value="PENDING">Pending</SelectItem>
+                <SelectItem value="PAID">Paid</SelectItem>
+                <SelectItem value="FAILED">Failed</SelectItem>
+              </SelectContent>
+            </Select>
+            <FieldError errors={getErrors("paymentStatus")} />
+          </Field>
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
           <Field>
             <FieldLabel>Courier Partner</FieldLabel>
             <Input 
               name="courierPartner"
               placeholder="e.g. BlueDart" 
               defaultValue={order.courierPartner || ""} 
-              disabled={order.paymentStatus === "PENDING"}
+              className="bg-white"
             />
             <FieldError errors={getErrors("courierPartner")} />
           </Field>
+          <Field>
+            <FieldLabel>Tracking ID</FieldLabel>
+            <Input 
+              name="trackingId"
+              placeholder="Enter tracking number" 
+              defaultValue={order.trackingId || ""} 
+              className="bg-white"
+            />
+            <FieldError errors={getErrors("trackingId")} />
+          </Field>
         </div>
+
         <Field>
-          <FieldLabel>Tracking ID</FieldLabel>
+          <FieldLabel>Tracking URL</FieldLabel>
           <Input 
-            name="trackingId"
-            placeholder="Enter tracking number" 
-            defaultValue={order.trackingId || ""} 
-            disabled={order.paymentStatus === "PENDING"}
+            name="trackingUrl"
+            placeholder="Direct link to tracking page" 
+            defaultValue={order.trackingUrl || ""} 
+            className="bg-white"
           />
-          <FieldError errors={getErrors("trackingId")} />
+          <FieldError errors={getErrors("trackingUrl")} />
         </Field>
+        
         <Button 
           type="submit"
-          className="w-full mt-4 bg-emerald-600 hover:bg-emerald-700"
+          className="w-full mt-4 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold h-11"
           disabled={isPending}
         >
-          {isPending ? "Updating..." : "Save Changes"}
+          {isPending ? "Updating Order..." : "Save Order Changes"}
         </Button>
       </form>
     </div>

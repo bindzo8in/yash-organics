@@ -249,6 +249,7 @@ export async function verifyPayment(data: {
         data: {
           paymentStatus: "PAID",
           orderStatus: "CONFIRMED",
+          confirmedAt: new Date(),
           razorpayPaymentId,
           razorpaySignature,
         },

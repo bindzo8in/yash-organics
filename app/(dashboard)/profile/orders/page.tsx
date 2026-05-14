@@ -2,8 +2,10 @@ import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import prisma from "@/lib/prisma";
 import Link from "next/link";
-import { ChevronLeft, Package, Clock, CheckCircle2, Truck } from "lucide-react";
+import { ChevronLeft, Package, Clock, CheckCircle2, Truck, AlertCircle, RotateCcw, CreditCard } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { OrderCard } from "@/components/shared/order-card";
 
 export default async function OrdersPage() {
   const session = await auth();
@@ -24,91 +26,46 @@ export default async function OrdersPage() {
     }
   });
 
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'PENDING': return <Clock className="w-4 h-4 text-amber-500" />;
-      case 'CONFIRMED': return <CheckCircle2 className="w-4 h-4 text-emerald-500" />;
-      case 'SHIPPED': return <Truck className="w-4 h-4 text-blue-500" />;
-      case 'DELIVERED': return <CheckCircle2 className="w-4 h-4 text-emerald-600" />;
-      default: return <Clock className="w-4 h-4 text-muted-foreground" />;
-    }
-  };
-
   return (
     <div className="min-h-screen bg-[#FDFBF7] pt-32 pb-20 px-6 lg:px-12">
-      <div className="max-w-5xl mx-auto space-y-12">
-        <Link href="/profile">
-          <Button variant="ghost" className="mb-4 p-0 hover:bg-transparent hover:text-primary group text-xs uppercase tracking-widest text-muted-foreground">
-            <ChevronLeft className="w-4 h-4 mr-2 group-hover:-translate-x-1 transition-transform" />
-            Back to Profile
-          </Button>
-        </Link>
+      <div className="max-w-5xl mx-auto">
+        <div className="mb-12">
+          <Link href="/profile">
+            <Button variant="ghost" className="mb-6 p-0 hover:bg-transparent hover:text-primary group text-xs uppercase tracking-[0.2em] text-muted-foreground font-semibold">
+              <ChevronLeft className="w-4 h-4 mr-2 group-hover:-translate-x-1 transition-transform" />
+              Return to Profile
+            </Button>
+          </Link>
 
-        <div className="flex items-center gap-4 border-b border-border pb-8">
-          <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center">
-            <Package className="w-6 h-6 text-primary" />
-          </div>
-          <div>
-            <h1 className="font-serif text-3xl text-primary">My Orders</h1>
-            <p className="text-muted-foreground text-sm">Track and review your past purchases.</p>
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-primary/10 pb-8">
+            <div className="space-y-2">
+              <h1 className="font-serif text-4xl md:text-5xl text-primary tracking-tight">Order History</h1>
+              <p className="text-muted-foreground font-light tracking-wide italic">A curated record of your organic journey with us.</p>
+            </div>
+            <div className="flex items-center gap-2 text-sm font-medium text-primary bg-primary/5 px-4 py-2 rounded-full border border-primary/10">
+              <Package className="w-4 h-4" />
+              <span>{orders.length} {orders.length === 1 ? 'Order' : 'Orders'} Total</span>
+            </div>
           </div>
         </div>
 
         {orders.length === 0 ? (
-          <div className="py-20 text-center bg-white border border-border/50">
-            <Package className="w-12 h-12 text-muted-foreground/30 mx-auto mb-4" />
-            <h3 className="text-xl font-serif mb-2">No orders found</h3>
-            <p className="text-muted-foreground mb-6">Looks like you haven&apos;t placed any orders yet.</p>
-            <Button asChild>
-              <Link href="/">Continue Shopping</Link>
+          <div className="py-24 text-center bg-white border border-primary/5 rounded-2xl shadow-sm">
+            <div className="w-20 h-20 bg-primary/5 rounded-full flex items-center justify-center mx-auto mb-6">
+              <Package className="w-10 h-10 text-primary/30" />
+            </div>
+            <h3 className="text-2xl font-serif text-primary mb-3">No orders yet</h3>
+            <p className="text-muted-foreground max-w-md mx-auto mb-8 font-light leading-relaxed">
+              Your organic pantry is waiting to be filled. Explore our collection of premium organic products and start your journey.
+            </p>
+            <Button asChild className="bg-primary hover:bg-primary/90 text-white px-8 h-12 rounded-full">
+              <Link href="/products">Shop the Collection</Link>
             </Button>
           </div>
         ) : (
-          <div className="space-y-8">
+          <div className="space-y-10">
             {orders.map((order) => (
-              <div key={order.id} className="bg-white border border-border/50 p-6 md:p-8">
-                <div className="flex flex-col md:flex-row justify-between gap-4 mb-6 pb-6 border-b border-border/50">
-                  <div>
-                    <p className="text-xs uppercase tracking-widest text-muted-foreground font-bold mb-1">Order #{order.id.slice(-6).toUpperCase()}</p>
-                    <p className="text-sm">{new Date(order.createdAt).toLocaleDateString("en-US", { year: 'numeric', month: 'long', day: 'numeric' })}</p>
-                  </div>
-                  <div className="flex flex-wrap gap-8">
-                    <div>
-                      <p className="text-xs uppercase tracking-widest text-muted-foreground font-bold mb-1">Status</p>
-                      <div className="flex items-center gap-2">
-                        {getStatusIcon(order.orderStatus)}
-                        <p className="text-sm font-medium text-foreground">{order.orderStatus}</p>
-                      </div>
-                    </div>
-                    <div>
-                      <p className="text-xs uppercase tracking-widest text-muted-foreground font-bold mb-1">Total</p>
-                      <p className="text-sm font-bold">₹{order.totalAmount.toLocaleString()}</p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="space-y-4">
-                  {order.orderItems.map((item) => (
-                    <div key={item.id} className="flex items-center gap-4 py-2">
-                      <div className="w-16 h-16 bg-muted relative rounded-sm overflow-hidden flex-shrink-0">
-                         {item.product.productImages[0] ? (
-                           // Using raw img tag here since Cloudinary URLs are external and next/image requires config
-                           <img src={item.product.productImages[0].url} alt={item.product.name} className="absolute inset-0 w-full h-full object-cover" />
-                         ) : (
-                           <div className="absolute inset-0 flex items-center justify-center bg-secondary/10 text-xs text-muted-foreground">IMG</div>
-                         )}
-                      </div>
-                      <div className="flex-1">
-                        <Link href={`/product/${item.product.slug}`} className="font-medium hover:text-primary transition-colors">
-                          {item.product.name}
-                        </Link>
-                        <p className="text-xs text-muted-foreground mt-1">Qty: {item.quantity} | Variant: {item.variant.name}</p>
-                      </div>
-                      <div className="text-sm font-medium">₹{(item.sellingPrice * item.quantity).toLocaleString()}</div>
-                    </div>
-                  ))}
-                </div>
-              </div>
+              <OrderCard key={order.id} order={order} />
             ))}
           </div>
         )}
@@ -116,3 +73,5 @@ export default async function OrdersPage() {
     </div>
   );
 }
+
+

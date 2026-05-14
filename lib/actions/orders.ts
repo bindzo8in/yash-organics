@@ -22,8 +22,10 @@ export async function updateOrderStatus(
   }
 
   const newStatus = formData.get("orderStatus") as string;
+  const paymentStatus = formData.get("paymentStatus") as string;
   const courierPartner = formData.get("courierPartner") as string;
   const trackingId = formData.get("trackingId") as string;
+  const trackingUrl = formData.get("trackingUrl") as string;
 
   try {
     const oldOrder = await prisma.order.findUnique({
@@ -34,14 +36,26 @@ export async function updateOrderStatus(
     if (!oldOrder) return { success: false, message: "Order not found" };
 
     await prisma.$transaction(async (tx) => {
-      // 1. Update the order
+      // 1. Prepare Update Data
+      const updateData: any = {
+        orderStatus: newStatus as any,
+        paymentStatus: paymentStatus as any,
+        courierPartner,
+        trackingId,
+        trackingUrl,
+      };
+
+      // Set timestamps if they don't exist yet
+      if (newStatus === "CONFIRMED" && !oldOrder.confirmedAt) updateData.confirmedAt = new Date();
+      if (newStatus === "PROCESSING" && !oldOrder.processingAt) updateData.processingAt = new Date();
+      if (newStatus === "SHIPPED" && !oldOrder.shippedAt) updateData.shippedAt = new Date();
+      if (newStatus === "DELIVERED" && !oldOrder.deliveredAt) updateData.deliveredAt = new Date();
+      if (newStatus === "CANCELLED" && !oldOrder.cancelledAt) updateData.cancelledAt = new Date();
+
+      // 2. Update the order
       const updatedOrder = await tx.order.update({
         where: { id: orderId },
-        data: {
-          orderStatus: newStatus as any,
-          courierPartner,
-          trackingId,
-        },
+        data: updateData,
       });
 
       // 2. Handle Stock Restoration for Returns/Cancellations

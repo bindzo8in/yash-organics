@@ -18,10 +18,12 @@ import { OrderDetails } from "@/components/admin/order-details";
 const statusMap: Record<string, any> = {
   PENDING: { color: "bg-amber-100 text-amber-800", label: "Pending" },
   CONFIRMED: { color: "bg-blue-100 text-blue-800", label: "Confirmed" },
+  PROCESSING: { color: "bg-indigo-100 text-indigo-800", label: "Processing" },
   SHIPPED: { color: "bg-purple-100 text-purple-800", label: "Shipped" },
   DELIVERED: { color: "bg-emerald-100 text-emerald-800", label: "Delivered" },
   CANCELLED: { color: "bg-red-100 text-red-800", label: "Cancelled" },
-  
+  RETURNED: { color: "bg-orange-100 text-orange-800", label: "Returned" },
+  REFUNDED: { color: "bg-slate-100 text-slate-800", label: "Refunded" },
 };
 
 export default function OrdersPage() {

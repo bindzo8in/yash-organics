@@ -9,6 +9,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { PriceDisplay } from "@/components/shared/price-display";
 import { cn } from "@/lib/utils";
+import { OrderTimeline } from "@/components/shared/order-timeline";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -24,7 +25,14 @@ export default async function OrderStatusPage({ params }: PageProps) {
     include: {
       orderItems: {
         include: {
-          product: true,
+          product: {
+            include: {
+              productImages: {
+                where: { isPrimary: true },
+                take: 1
+              }
+            }
+          },
           variant: true,
         },
       },
@@ -90,9 +98,17 @@ export default async function OrderStatusPage({ params }: PageProps) {
               <div className="space-y-6">
                 {order.orderItems.map((item) => (
                   <div key={item.id} className="flex gap-4">
-                    <div className="relative w-20 h-24 bg-muted flex-shrink-0">
-                      {/* Note: Ideally we'd have a product image here, fetching first primary for now if exists */}
-                      <div className="absolute inset-0 bg-primary/5 flex items-center justify-center text-[10px] text-primary/40 uppercase font-bold">Image</div>
+                    <div className="relative w-20 h-24 bg-muted flex-shrink-0 overflow-hidden">
+                      {item.productImage || item.product.productImages[0]?.url ? (
+                        <Image 
+                          src={item.productImage || item.product.productImages[0]?.url} 
+                          alt={item.productName || item.product.name}
+                          fill
+                          className="object-cover"
+                        />
+                      ) : (
+                        <div className="absolute inset-0 bg-primary/5 flex items-center justify-center text-[10px] text-primary/40 uppercase font-bold">Image</div>
+                      )}
                     </div>
                     <div className="flex-grow">
                       <h3 className="font-medium text-sm">{item.product.name}</h3>
@@ -108,15 +124,15 @@ export default async function OrderStatusPage({ params }: PageProps) {
             </Card>
 
             {/* Delivery Details */}
-            <Card className="p-6 border-foreground/5 bg-white">
-              <h2 className="font-serif text-xl mb-6 flex items-center gap-2">
-                <Truck className="w-5 h-5 text-primary" />
-                Delivery Details
-              </h2>
-              <div className="grid sm:grid-cols-2 gap-8 text-sm">
-                <div className="space-y-3">
-                  <div className="flex items-start gap-2">
-                    <MapPin className="w-4 h-4 text-muted-foreground mt-0.5" />
+            <div className="grid md:grid-cols-2 gap-8">
+              <Card className="p-6 border-foreground/5 bg-white h-full">
+                <h2 className="font-serif text-xl mb-6 flex items-center gap-2">
+                  <Truck className="w-5 h-5 text-primary" />
+                  Delivery Details
+                </h2>
+                <div className="text-sm space-y-6">
+                  <div className="flex items-start gap-3">
+                    <MapPin className="w-4 h-4 text-primary mt-0.5" />
                     <div>
                       <p className="font-bold mb-1">{order.address.fullName}</p>
                       <p className="text-muted-foreground leading-relaxed">
@@ -126,23 +142,34 @@ export default async function OrderStatusPage({ params }: PageProps) {
                       </p>
                     </div>
                   </div>
+                  
+                  <div className="pt-4 border-t border-primary/5 space-y-3">
+                    <div className="flex items-center gap-3">
+                      <Phone className="w-4 h-4 text-primary" />
+                      <span className="text-muted-foreground">{order.address.phone}</span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <Mail className="w-4 h-4 text-primary" />
+                      <span className="text-muted-foreground">{order.address.email}</span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <Calendar className="w-4 h-4 text-primary" />
+                      <span className="text-muted-foreground italic">Placed on: {order.createdAt.toLocaleDateString("en-US", { month: 'long', day: 'numeric', year: 'numeric' })}</span>
+                    </div>
+                  </div>
                 </div>
-                <div className="space-y-3">
-                   <div className="flex items-center gap-2">
-                     <Phone className="w-4 h-4 text-muted-foreground" />
-                     <span className="text-muted-foreground">{order.address.phone}</span>
-                   </div>
-                   <div className="flex items-center gap-2">
-                     <Mail className="w-4 h-4 text-muted-foreground" />
-                     <span className="text-muted-foreground">{order.address.email}</span>
-                   </div>
-                   <div className="flex items-center gap-2 pt-2">
-                     <Calendar className="w-4 h-4 text-muted-foreground" />
-                     <span className="text-muted-foreground">Placed on: {order.createdAt.toLocaleDateString()}</span>
-                   </div>
+              </Card>
+
+              <Card className="p-6 border-foreground/5 bg-white h-full overflow-hidden">
+                <h2 className="font-serif text-xl mb-8 flex items-center gap-2">
+                  <Package className="w-5 h-5 text-primary" />
+                  Live Tracking
+                </h2>
+                <div className="scale-90 origin-top-left -mt-2">
+                  <OrderTimeline order={order} />
                 </div>
-              </div>
-            </Card>
+              </Card>
+            </div>
           </div>
 
           {/* Summary Sidebar */}

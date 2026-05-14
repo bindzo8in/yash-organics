@@ -173,6 +173,8 @@ enum OrderStatus {
   SHIPPED
   DELIVERED
   CANCELLED
+  RETURNED
+  REFUNDED
 }
 
 enum PaymentStatus {
@@ -200,6 +202,14 @@ model Order {
   address        Address @relation(fields: [addressId], references: [id])
   courierPartner String?
   trackingId     String?
+  trackingUrl    String?
+
+  // Status Timestamps for Timeline
+  confirmedAt    DateTime?
+  processingAt   DateTime?
+  shippedAt      DateTime?
+  deliveredAt    DateTime?
+  cancelledAt    DateTime?
 
   // Shipping Snapshot (to preserve data if address record changes)
   shippingName    String?
