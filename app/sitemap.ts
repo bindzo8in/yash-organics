@@ -3,7 +3,7 @@ import prisma from "@/lib/prisma";
 import { env } from "@/lib/env";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://yashorganics.com";
+  const baseUrl = env.NEXT_PUBLIC_SITE_URL;
 
   // Fetch active products
   const products = await prisma.product.findMany({

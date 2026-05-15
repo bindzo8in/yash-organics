@@ -62,7 +62,7 @@ export function QuickAddModal({ product, isOpen, onClose }: QuickAddModalProps) 
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-[420px] p-0 overflow-hidden rounded-none border-none bg-[#FDFBF7]">
+      <DialogContent className="sm:max-w-[420px] p-0 overflow-y-auto max-h-[90vh] rounded-none border-none bg-[#FDFBF7]">
         <div className="relative">
           {/* Close Button Override for Design Consistency */}
           <button 

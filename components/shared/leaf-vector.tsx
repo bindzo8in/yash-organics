@@ -20,7 +20,7 @@ export function LeafVector({ src, className, ...props }: LeafVectorProps) {
         alt="Decorative leaf"
         width={400}
         height={400}
-        className="w-full h-full object-contain opacity-20"
+        className="w-full h-full object-contain"
       />
     </motion.div>
   );

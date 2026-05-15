@@ -16,7 +16,7 @@ export function PromoBanner() {
   const y = useTransform(scrollYProgress, [0, 1], ["-10%", "10%"]);
 
   return (
-    <section ref={containerRef} className="py-24 md:py-40 px-6 sm:px-10">
+    <section ref={containerRef} className="py-10 md:py-24 px-6 sm:px-10">
       <div className="max-w-7xl mx-auto">
         <motion.div 
           initial={{ opacity: 0, y: 40 }}
@@ -61,7 +61,7 @@ export function PromoBanner() {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ delay: 0.4, duration: 0.8 }}
-                  className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-serif leading-[1.1] md:leading-tight drop-shadow-2xl"
+                  className="text-4xl sm:text-6xl md:text-7xl lg:text-8xl font-serif leading-[1.1] md:leading-tight drop-shadow-2xl"
                 >
                   Pure Ingredients. <br />
                   <span className="italic text-emerald-100">Honest Sourcing.</span>
@@ -96,8 +96,8 @@ export function PromoBanner() {
             </div>
           </div>
           
-          {/* Decorative Corner Accents - Improved placement */}
-          <div className="absolute -bottom-10 -right-10 z-10 opacity-10 group-hover:opacity-20 transition-all duration-1000 pointer-events-none">
+          {/* Decorative Corner Accents - Hidden on small mobile to avoid overlap */}
+          <div className="absolute -bottom-10 -right-10 z-0 opacity-10 group-hover:opacity-20 transition-all duration-1000 pointer-events-none hidden sm:block">
              <div className="text-white text-[20rem] font-serif italic rotate-12">🌿</div>
           </div>
         </motion.div>

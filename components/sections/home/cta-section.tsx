@@ -7,13 +7,13 @@ import { LeafVector } from "@/components/shared/leaf-vector";
 
 export function CTASection() {
   return (
-    <section className="py-16 px-6 bg-background">
+    <section className="py-10 md:py-20 px-4 sm:px-6 bg-background">
       <motion.div 
         initial={{ opacity: 0, y: 50 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true }}
         transition={{ duration: 1.2, ease: [0.21, 0.47, 0.32, 0.98] }}
-        className="max-w-7xl mx-auto relative overflow-hidden bg-emerald-950 text-white rounded-3xl px-8 py-16 md:py-20 shadow-[0_50px_100px_rgba(6,78,59,0.2)]"
+        className="max-w-7xl mx-auto relative overflow-hidden bg-emerald-950 text-white rounded-2xl md:rounded-3xl px-6 py-12 md:px-12 md:py-20 shadow-[0_50px_100px_rgba(6,78,59,0.2)]"
       >
         {/* Decorative Vectors */}
         <LeafVector 
@@ -40,7 +40,7 @@ export function CTASection() {
             className="space-y-6"
           >
             <span className="text-xs uppercase tracking-[0.5em] font-bold text-emerald-400">Join the Ritual</span>
-            <h2 className="text-4xl md:text-6xl font-serif leading-tight">
+            <h2 className="text-3xl sm:text-4xl md:text-6xl font-serif leading-tight">
               Start Your <span className="italic text-emerald-100">Organic</span> <br />
               Journey Today.
             </h2>
@@ -65,13 +65,13 @@ export function CTASection() {
             transition={{ delay: 0.4 }}
             className="relative max-w-xl mx-auto pt-6"
           >
-            <div className="relative group">
+            <div className="flex flex-col sm:flex-row gap-4">
               <input 
                 type="email" 
-                placeholder="Enter your email address"
-                className="w-full bg-white/5 border border-white/10 rounded-full py-6 pl-10 pr-40 text-sm focus:ring-1 focus:ring-emerald-400 focus:border-emerald-400 outline-none backdrop-blur-md transition-all placeholder:text-white/30 hover:bg-white/10"
+                placeholder="Enter your email"
+                className="flex-1 bg-white/5 border border-white/10 rounded-full py-5 px-8 text-sm focus:ring-1 focus:ring-emerald-400 focus:border-emerald-400 outline-none backdrop-blur-md transition-all placeholder:text-white/30 hover:bg-white/10"
               />
-              <button className="absolute right-2 top-2 bottom-2 bg-white text-emerald-950 px-10 rounded-full font-bold uppercase tracking-widest text-[10px] hover:bg-emerald-50 hover:scale-105 active:scale-95 transition-all shadow-xl">
+              <button className="bg-white text-emerald-950 py-5 px-10 rounded-full font-bold uppercase tracking-widest text-[10px] hover:bg-emerald-50 hover:scale-105 active:scale-95 transition-all shadow-xl whitespace-nowrap">
                 Join Now
               </button>
             </div>

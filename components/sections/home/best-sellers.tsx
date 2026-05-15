@@ -6,14 +6,30 @@ import Link from "next/link";
 import { ProductCard } from "@/components/sections/product-listing/product-card";
 import { Product } from "@/lib/types/product";
 import { LeafVector } from "@/components/shared/leaf-vector";
+import { useCart } from "@/hooks/use-cart";
+import { toast } from "sonner";
+import { useState } from "react";
+import { QuickAddModal } from "@/components/sections/product-listing/quick-add-modal";
 
 interface BestSellersProps {
   products: Product[];
 }
 
 export function BestSellers({ products }: BestSellersProps) {
+  const { addItem } = useCart();
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+
+  const handleQuickAdd = (product: Product) => {
+    setSelectedProduct(product);
+  };
+
   return (
-    <section className="py-16 px-6 bg-background relative overflow-hidden">
+    <section className="py-12 md:py-20 px-6 bg-background relative overflow-hidden">
+      <QuickAddModal 
+        product={selectedProduct}
+        isOpen={!!selectedProduct}
+        onClose={() => setSelectedProduct(null)}
+      />
       {/* Background Decor */}
       <LeafVector 
         src="/leaf/leaf-1.svg"
@@ -22,7 +38,7 @@ export function BestSellers({ products }: BestSellersProps) {
         transition={{ duration: 15, repeat: Infinity, ease: "easeInOut" }}
       />
       <div className="max-w-7xl mx-auto">
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-16">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-8 md:mb-16">
           <div className="space-y-4">
             <motion.span 
               initial={{ opacity: 0, y: 10 }}
@@ -37,7 +53,7 @@ export function BestSellers({ products }: BestSellersProps) {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: 0.1 }}
-              className="text-4xl md:text-6xl font-serif"
+              className="text-3xl sm:text-4xl md:text-6xl font-serif"
             >
               Our Best <span className="italic">Sellers</span>
             </motion.h2>
@@ -56,7 +72,7 @@ export function BestSellers({ products }: BestSellersProps) {
         </div>
 
         {products && products.length > 0 ? (
-  <div className="grid grid-cols-2 gap-4 sm:gap-5 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4">
+  <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
     {products.map((product, index) => (
       <motion.div
         key={product.id}
@@ -72,7 +88,7 @@ export function BestSellers({ products }: BestSellersProps) {
       >
         <ProductCard
           product={product}
-          onQuickAdd={() => {}}
+          onQuickAdd={handleQuickAdd}
         />
       </motion.div>
     ))}

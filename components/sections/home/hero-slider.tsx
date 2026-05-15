@@ -90,7 +90,7 @@ export function HeroSlider({ slides: dbSlides }: HeroSliderProps) {
               <span className={`text-xs uppercase tracking-[0.4em] block font-bold ${slides[current].color || 'text-emerald-400'}`}>
                 {slides[current].subtitle}
               </span>
-              <h1 className="text-5xl md:text-8xl font-serif leading-[1.1] text-white drop-shadow-sm">
+              <h1 className="text-4xl sm:text-5xl md:text-8xl font-serif leading-[1.1] text-white drop-shadow-sm">
                 {slides[current].title.split(" ").map((word: string, i: number) => (
                   <span key={i} className={i % 3 === 2 ? "italic block md:inline" : ""}>
                     {word}{" "}
@@ -112,7 +112,7 @@ export function HeroSlider({ slides: dbSlides }: HeroSliderProps) {
       </div>
 
       {/* Navigation Controls */}
-      <div className="absolute bottom-12 right-12 z-20 flex items-center gap-6">
+      <div className="absolute bottom-12 left-6 right-6 md:left-auto md:right-12 z-20 flex items-center justify-between md:justify-end gap-6">
         <div className="flex gap-2">
           {slides.map((_, i) => (
             <button

@@ -2,10 +2,11 @@ import { Resend } from "resend";
 import { ResetPasswordEmail } from "@/emails/reset-password";
 import { OrderConfirmationEmail } from "@/emails/order-confirmation";
 import { VerifyOtpEmail } from "@/emails/verify-otp";
+import { env } from "./env";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
-const domain = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+const domain = env.NEXT_PUBLIC_SITE_URL;
 
 export const sendPasswordResetEmail = async (email: string, token: string, name: string) => {
   const resetLink = `${domain}/reset-password?token=${token}`;

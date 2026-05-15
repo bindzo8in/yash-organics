@@ -1,7 +1,10 @@
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
+import { getParentCategories } from "@/lib/services/category.service";
 
-export function Footer() {
+export async function Footer() {
+  const categories = await getParentCategories();
+
   return (
     <footer className="bg-emerald-50/30 border-t border-emerald-100/50 py-32 px-6">
       <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-12 gap-16 md:gap-8">
@@ -40,9 +43,16 @@ export function Footer() {
           <div className="space-y-8">
             <h4 className="text-[10px] uppercase tracking-[0.4em] font-bold text-emerald-900/40">Shop Essentials</h4>
             <ul className="space-y-4">
-              <li><Link href="/category/hair-care" className="text-sm text-muted-foreground hover:text-emerald-700 hover:translate-x-1 transition-all inline-block">Hair Care</Link></li>
-              <li><Link href="/category/skin-care" className="text-sm text-muted-foreground hover:text-emerald-700 hover:translate-x-1 transition-all inline-block">Skin Care</Link></li>
-              <li><Link href="/category/nutrition" className="text-sm text-muted-foreground hover:text-emerald-700 hover:translate-x-1 transition-all inline-block">Premium Nutrition</Link></li>
+              {categories.map((category) => (
+                <li key={category.id}>
+                  <Link 
+                    href={`/products?category=${category.slug}`} 
+                    className="text-sm text-muted-foreground hover:text-emerald-700 hover:translate-x-1 transition-all inline-block"
+                  >
+                    {category.name}
+                  </Link>
+                </li>
+              ))}
               <li><Link href="/products" className="text-sm text-muted-foreground hover:text-emerald-700 hover:translate-x-1 transition-all inline-block">View All Products</Link></li>
             </ul>
           </div>
@@ -80,6 +90,7 @@ export function Footer() {
         <div className="flex gap-12 text-[10px] uppercase tracking-[0.3em] text-emerald-900/30 font-bold">
           <Link href="/privacy" className="hover:text-emerald-700 transition-colors">Privacy Ritual</Link>
           <Link href="/terms" className="hover:text-emerald-700 transition-colors">Terms of Harmony</Link>
+          <Link href="https://bindzo8.com/" target="_blank" rel="noopener noreferrer" className="hover:text-emerald-700 transition-colors">Design & Developed by Bindzo8</Link>
         </div>
       </div>
     </footer>

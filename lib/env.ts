@@ -7,10 +7,13 @@ export const env = createEnv({
     AUTH_SECRET: z.string().min(1),
     // RAZORPAY_KEY_ID: z.string().min(1),
     RAZORPAY_KEY_SECRET: z.string().min(1),
+    RESEND_API_KEY: z.string().min(1),
     CLOUDINARY_CLOUD_NAME: z.string().min(1),
     CLOUDINARY_API_KEY: z.string().min(1),
     CLOUDINARY_API_SECRET: z.string().min(1),
+    ADMIN_EMAIL: z.string().email(),
     NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
+    AUTH_TRUST_HOST: z.coerce.boolean().default(true),
   },
   client: {
     NEXT_PUBLIC_RAZORPAY_KEY_ID: z.string().min(1),
@@ -24,7 +27,10 @@ export const env = createEnv({
     CLOUDINARY_CLOUD_NAME: process.env.CLOUDINARY_CLOUD_NAME,
     CLOUDINARY_API_KEY: process.env.CLOUDINARY_API_KEY,
     CLOUDINARY_API_SECRET: process.env.CLOUDINARY_API_SECRET,
+    RESEND_API_KEY: process.env.RESEND_API_KEY,
+    ADMIN_EMAIL: process.env.ADMIN_EMAIL,
     NODE_ENV: process.env.NODE_ENV,
     NEXT_PUBLIC_SITE_URL: process.env.NEXT_PUBLIC_SITE_URL,
+    AUTH_TRUST_HOST: process.env.AUTH_TRUST_HOST
   },
 });

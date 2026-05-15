@@ -4,14 +4,30 @@ import { motion } from "motion/react";
 import { ProductCard } from "@/components/sections/product-listing/product-card";
 import { Product } from "@/lib/types/product";
 import { LeafVector } from "@/components/shared/leaf-vector";
+import { useCart } from "@/hooks/use-cart";
+import { toast } from "sonner";
+import { useState } from "react";
+import { QuickAddModal } from "@/components/sections/product-listing/quick-add-modal";
 
 interface NewLaunchProps {
   products: Product[];
 }
 
 export function NewLaunch({ products }: NewLaunchProps) {
+  const { addItem } = useCart();
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+
+  const handleQuickAdd = (product: Product) => {
+    setSelectedProduct(product);
+  };
+
   return (
-    <section className="py-16 px-6 bg-secondary/5 relative overflow-hidden">
+    <section className="py-12 md:py-20 px-6 bg-secondary/5 relative overflow-hidden">
+      <QuickAddModal 
+        product={selectedProduct}
+        isOpen={!!selectedProduct}
+        onClose={() => setSelectedProduct(null)}
+      />
       {/* Background Decor */}
       <LeafVector 
         src="/leaf/leaf.svg"
@@ -58,7 +74,7 @@ export function NewLaunch({ products }: NewLaunchProps) {
         <div className="h-full">
           <ProductCard
             product={product}
-            onQuickAdd={() => {}}
+            onQuickAdd={handleQuickAdd}
           />
         </div>
       </motion.div>

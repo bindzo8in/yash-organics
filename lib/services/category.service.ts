@@ -62,3 +62,23 @@ export async function getAllCategories(): Promise<Category[]> {
     productCount: cat._count.products + ((cat as any).children?.reduce((acc: number, child: any) => acc + child._count.products, 0) || 0)
   }));
 }
+
+export async function getParentCategories(): Promise<Category[]> {
+  const categories = await prisma.category.findMany({
+    where: { 
+      isActive: true,
+      parentId: null 
+    },
+    orderBy: { order: "asc" }
+  });
+
+  return categories.map(cat => ({
+    id: cat.id,
+    name: cat.name,
+    slug: cat.slug,
+    description: cat.description,
+    image: cat.image,
+    parentId: cat.parentId
+  }));
+}
+

@@ -30,7 +30,7 @@ const reviews = [
 
 export function Reviews() {
   return (
-    <section className="py-16 px-6 bg-background overflow-hidden relative">
+    <section className="py-12 md:py-20 px-6 bg-background overflow-hidden relative">
       {/* Background Decor */}
       <LeafVector 
         src="/leaf/leaf-2.svg"

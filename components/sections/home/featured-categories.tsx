@@ -13,7 +13,7 @@ interface FeaturedCategoriesProps {
 
 export function FeaturedCategories({ categories }: FeaturedCategoriesProps) {
   return (
-    <section className="py-16 px-6 bg-secondary/5 relative overflow-hidden">
+    <section className="py-12 md:py-20 px-6 bg-secondary/5 relative overflow-hidden">
       {/* Background Decor */}
       <LeafVector 
         src="/leaf/leaf-3.svg"

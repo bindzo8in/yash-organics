@@ -50,7 +50,7 @@ export default async function Home() {
         <NewLaunch products={newLaunches} />
 
         {/* 6. Philosophy (Special Highlight) */}
-        <section className="py-48 bg-background relative overflow-hidden">
+        <section className="py-24 md:py-40 bg-background relative overflow-hidden">
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-emerald-50/30 rounded-full blur-[120px] pointer-events-none" />
           
           <div className="max-w-5xl mx-auto text-center px-6 relative z-10">
