@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import { ShoppingBag, User, Search, Menu, X, ChevronDown } from "lucide-react";
@@ -58,7 +59,7 @@ export function Navbar() {
         isScrolled 
           ? "bg-background/80 backdrop-blur-md border-b border-border/50 py-3 text-foreground" 
           : isTransparent
-            ? "bg-transparent py-6 text-white"
+            ? "bg-background/20 py-6 text-white"
             : "bg-background py-4 text-foreground border-b border-border/10"
       )}
     >
@@ -136,15 +137,17 @@ export function Navbar() {
 
         {/* Perfectly Centered Logo */}
         <Link href="/" className="absolute left-1/2 -translate-x-1/2 group">
-          <h1 className={cn(
-            "text-2xl font-serif tracking-[0.2em] uppercase transition-all duration-300",
-            isTransparent ? "text-white" : "text-foreground group-hover:text-primary"
-          )}>
-            Yash <span className={cn(
-              "transition-colors duration-300",
-              isTransparent ? "text-emerald-400" : "text-primary group-hover:text-foreground"
-            )}>Organics</span>
-          </h1>
+          <Image 
+            src="/logo/logo-rect.webp" 
+            alt="Yash Organics" 
+            width={160} 
+            height={50} 
+            className={cn(
+              "h-10 w-auto object-contain transition-all duration-300",
+              
+            )}
+            priority
+          />
         </Link>
 
         {/* Right Actions & Links */}

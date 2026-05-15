@@ -24,6 +24,7 @@ import {
   SidebarFooter,
 } from "@/components/ui/sidebar";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 
 const items = [
@@ -64,8 +65,19 @@ export function AdminSidebar() {
 
   return (
     <Sidebar collapsible="icon">
-      <SidebarHeader className="h-16 flex items-center px-6">
-        <span className="font-bold text-xl tracking-tight">Yash Organics</span>
+      <SidebarHeader className="h-16 flex items-center px-4">
+        <div className="flex items-center gap-3">
+          <Image 
+            src="/logo/logo_sq.jpeg" 
+            alt="Yash Organics" 
+            width={32} 
+            height={32} 
+            className="rounded-lg object-contain"
+          />
+          <span className="font-bold text-lg tracking-tight group-data-[collapsible=icon]:hidden">
+            Yash Organics
+          </span>
+        </div>
       </SidebarHeader>
       <SidebarContent>
         <SidebarGroup>

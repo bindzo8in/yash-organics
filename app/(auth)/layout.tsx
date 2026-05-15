@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 
 export default function AuthLayout({
   children,
@@ -10,9 +11,14 @@ export default function AuthLayout({
       {/* Simple Header */}
       <header className="p-8 flex justify-center">
         <Link href="/">
-          <h1 className="text-2xl font-serif tracking-widest uppercase">
-            Yash <span className="text-primary">Organics</span>
-          </h1>
+          <Image 
+            src="/logo/logo_rect.jpeg" 
+            alt="Yash Organics" 
+            width={180} 
+            height={50} 
+            className="h-10 w-auto object-contain"
+            priority
+          />
         </Link>
       </header>
 

@@ -1,10 +1,18 @@
-"use client";
-
+import { auth } from "@/auth";
+import { redirect } from "next/navigation";
 import { SidebarProvider, SidebarTrigger, SidebarInset } from "@/components/ui/sidebar";
 import { AdminSidebar } from "@/components/admin/sidebar";
 import { Separator } from "@/components/ui/separator";
 
-export default function AdminLayout({ children }: { children: React.ReactNode }) {
+export default async function AdminLayout({ children }: { children: React.ReactNode }) {
+  const session = await auth();
+  
+  // Strict admin check
+  const role = (session?.user as any)?.role;
+  if (!session || (role !== "ADMIN" && role !== "SUPER_ADMIN")) {
+    redirect("/");
+  }
+
   return (
     <SidebarProvider>
       <AdminSidebar />

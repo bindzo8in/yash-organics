@@ -33,14 +33,14 @@ export default function ContactPage() {
                   </div>
                   <div className="group">
                     <p className="text-[10px] uppercase tracking-[0.2em] font-bold text-primary mb-2 opacity-50">Phone</p>
-                    <p className="text-foreground font-serif text-xl group-hover:text-primary transition-colors cursor-pointer">+91 98765 43210</p>
+                    <p className="text-foreground font-serif text-xl group-hover:text-primary transition-colors cursor-pointer">+91 97901 84439</p>
                     <p className="text-xs tracking-widest mt-1">MON-FRI, 9AM - 6PM IST</p>
                   </div>
                   <div className="group">
                     <p className="text-[10px] uppercase tracking-[0.2em] font-bold text-primary mb-2 opacity-50">Headquarters</p>
                     <p className="text-foreground leading-relaxed">
-                      123 Organic Lane, Green Valley<br/>
-                      Mumbai, Maharashtra 400001<br/>
+                      East Tambaram,<br/>
+                      Chennai - 600 059<br/>
                       India
                     </p>
                   </div>

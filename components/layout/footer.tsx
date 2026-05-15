@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { ArrowRight } from "lucide-react";
 import { getParentCategories } from "@/lib/services/category.service";
 
@@ -11,9 +12,13 @@ export async function Footer() {
         {/* Brand Section */}
         <div className="md:col-span-4 space-y-8">
           <Link href="/" className="inline-block group">
-            <h2 className="text-2xl font-serif tracking-[0.2em] uppercase transition-colors group-hover:text-emerald-700">
-              Yash <span className="text-emerald-600">Organics</span>
-            </h2>
+            <Image 
+              src="/logo/logo-sq.webp" 
+              alt="Yash Organics" 
+              width={80} 
+              height={80} 
+              className="rounded-xl object-contain hover:scale-105 transition-transform duration-300"
+            />
           </Link>
           <p className="text-sm text-muted-foreground leading-relaxed max-w-sm">
             Handcrafted with love and rooted in ancient wisdom. 
@@ -71,8 +76,8 @@ export async function Footer() {
         <div className="md:col-span-3 space-y-8">
           <h4 className="text-[10px] uppercase tracking-[0.4em] font-bold text-emerald-900/40">Our Studio</h4>
           <div className="space-y-4 text-sm text-muted-foreground leading-loose">
-            <p>123 Organic Lane, Green Valley<br />Rajasthan, India 302001</p>
-            <p>hello@yashorganics.com<br />+91 98765 43210</p>
+            <p>East Tambaram,<br />Chennai - 600 059</p>
+            <p>yashorganics010@gmail.com<br />+91 97901 84439</p>
           </div>
           <div className="pt-4">
              <Link href="/contact" className="inline-flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-emerald-700 group">
