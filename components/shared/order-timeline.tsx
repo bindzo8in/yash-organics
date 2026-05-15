@@ -1,6 +1,6 @@
 "use client";
 
-import { CheckCircle2, Clock, Package, Truck, ShoppingCart, AlertCircle } from "lucide-react";
+import { CheckCircle2, Clock, Package, Truck, ShoppingCart, AlertCircle, RotateCcw } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 
@@ -13,49 +13,86 @@ interface OrderTimelineProps {
     shippedAt?: Date | string | null;
     deliveredAt?: Date | string | null;
     cancelledAt?: Date | string | null;
+    returnRequestedAt?: Date | string | null;
+    returnApprovedAt?: Date | string | null;
+    returnedAt?: Date | string | null;
+    refundedAt?: Date | string | null;
   };
 }
 
 export function OrderTimeline({ order }: OrderTimelineProps) {
-  const steps = [
+  const baseSteps = [
     {
       id: "ordered",
       label: "Ordered",
       date: order.createdAt,
       icon: ShoppingCart,
-      isCompleted: true, // Always completed if order exists
+      isCompleted: true,
     },
     {
       id: "confirmed",
       label: "Order Confirmed",
       date: order.confirmedAt,
       icon: CheckCircle2,
-      isCompleted: !!order.confirmedAt || ["PROCESSING", "SHIPPED", "DELIVERED"].includes(order.orderStatus),
+      isCompleted: !!order.confirmedAt || ["PROCESSING", "SHIPPED", "DELIVERED", "RETURN_REQUESTED", "RETURN_APPROVED", "RETURNED", "REFUNDED"].includes(order.orderStatus),
     },
     {
       id: "processing",
       label: "Order Ready",
       date: order.processingAt,
       icon: Package,
-      isCompleted: !!order.processingAt || ["SHIPPED", "DELIVERED"].includes(order.orderStatus),
+      isCompleted: !!order.processingAt || ["SHIPPED", "DELIVERED", "RETURN_REQUESTED", "RETURN_APPROVED", "RETURNED", "REFUNDED"].includes(order.orderStatus),
     },
     {
       id: "shipped",
       label: "Shipped",
       date: order.shippedAt,
       icon: Truck,
-      isCompleted: !!order.shippedAt || order.orderStatus === "DELIVERED",
+      isCompleted: !!order.shippedAt || ["DELIVERED", "RETURN_REQUESTED", "RETURN_APPROVED", "RETURNED", "REFUNDED"].includes(order.orderStatus),
     },
     {
       id: "delivered",
       label: "Delivered",
       date: order.deliveredAt,
       icon: Package,
-      isCompleted: order.orderStatus === "DELIVERED",
+      isCompleted: !!order.deliveredAt || ["RETURN_REQUESTED", "RETURN_APPROVED", "RETURNED", "REFUNDED"].includes(order.orderStatus),
     },
   ];
 
-  // If cancelled, show a different view or add a cancelled step
+  const returnSteps = order.returnRequestedAt ? [
+    {
+      id: "return_requested",
+      label: "Return Requested",
+      date: order.returnRequestedAt,
+      icon: RotateCcw,
+      isCompleted: true,
+    },
+    {
+      id: "return_approved",
+      label: "Return Approved",
+      date: order.returnApprovedAt,
+      icon: CheckCircle2,
+      isCompleted: !!order.returnApprovedAt || ["RETURNED", "REFUNDED"].includes(order.orderStatus),
+    },
+    {
+      id: "returned",
+      label: "Returned",
+      date: order.returnedAt,
+      icon: Package,
+      isCompleted: !!order.returnedAt || order.orderStatus === "REFUNDED",
+    },
+    {
+      id: "refunded",
+      label: "Refunded",
+      date: order.refundedAt,
+      icon: ShoppingCart,
+      isCompleted: order.orderStatus === "REFUNDED",
+    }
+  ] : [];
+
+  const steps = [...baseSteps, ...returnSteps];
+
+  // If cancelled, show a different view
   if (order.orderStatus === "CANCELLED") {
     return (
       <div className="flex items-center gap-4 p-4 bg-red-50 rounded-xl border border-red-100 text-red-700">
@@ -74,12 +111,9 @@ export function OrderTimeline({ order }: OrderTimelineProps) {
     <div className="space-y-8 relative before:absolute before:inset-0 before:ml-5 before:-translate-x-px before:h-full before:w-0.5 before:bg-gradient-to-b before:from-primary/20 before:via-primary/20 before:to-transparent">
       {steps.map((step, index) => {
         const Icon = step.icon;
-        const isCurrent = order.orderStatus.toLowerCase() === step.id.toLowerCase() || 
-                        (step.id === "ordered" && order.orderStatus === "PENDING") ||
-                        (step.id === "confirmed" && order.orderStatus === "CONFIRMED");
 
         return (
-          <div key={step.id} className="relative flex items-start gap-6 group">
+          <div key={`${step.id}-${index}`} className="relative flex items-start gap-6 group">
             {/* Circle & Checkmark */}
             <div className={cn(
               "flex items-center justify-center w-10 h-10 rounded-full border-2 z-10 transition-all duration-500",

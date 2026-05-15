@@ -7,6 +7,18 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { OrderTimeline } from "./order-timeline";
 import { cn } from "@/lib/utils";
+import { canCancelOrder, canReturnOrder } from "@/lib/utils/order-logic";
+import { cancelOrder, requestReturn } from "@/lib/actions/order-lifecycle.actions";
+import { toast } from "sonner";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
 
 interface OrderCardProps {
   order: any;
@@ -14,6 +26,36 @@ interface OrderCardProps {
 
 export function OrderCard({ order }: OrderCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showCancelDialog, setShowCancelDialog] = useState(false);
+  const [showReturnDialog, setShowReturnDialog] = useState(false);
+
+  const canCancel = canCancelOrder(order);
+  const canReturn = canReturnOrder(order);
+
+  const handleCancel = async (reason: string) => {
+    setIsSubmitting(true);
+    const result = await cancelOrder(order.id, reason);
+    setIsSubmitting(false);
+    if (result.success) {
+      toast.success(result.message);
+      setShowCancelDialog(false);
+    } else {
+      toast.error(result.message);
+    }
+  };
+
+  const handleReturn = async (reason: string) => {
+    setIsSubmitting(true);
+    const result = await requestReturn(order.id, reason);
+    setIsSubmitting(false);
+    if (result.success) {
+      toast.success(result.message);
+      setShowReturnDialog(false);
+    } else {
+      toast.error(result.message);
+    }
+  };
 
   const getStatusConfig = (status: string) => {
     switch (status) {
@@ -23,7 +65,10 @@ export function OrderCard({ order }: OrderCardProps) {
       case 'SHIPPED': return { icon: <Truck className="w-4 h-4" />, color: "bg-purple-50 text-purple-700 border-purple-200", label: "Shipped" };
       case 'DELIVERED': return { icon: <CheckCircle2 className="w-4 h-4" />, color: "bg-green-50 text-green-700 border-green-200", label: "Delivered" };
       case 'CANCELLED': return { icon: <AlertCircle className="w-4 h-4" />, color: "bg-red-50 text-red-700 border-red-200", label: "Cancelled" };
-      case 'RETURNED': return { icon: <RotateCcw className="w-4 h-4" />, color: "bg-orange-50 text-orange-700 border-orange-200", label: "Returned" };
+      case 'RETURN_REQUESTED': return { icon: <RotateCcw className="w-4 h-4" />, color: "bg-orange-50 text-orange-700 border-orange-200", label: "Return Requested" };
+      case 'RETURN_APPROVED': return { icon: <CheckCircle2 className="w-4 h-4" />, color: "bg-green-50 text-green-700 border-green-200", label: "Return Approved" };
+      case 'RETURN_REJECTED': return { icon: <AlertCircle className="w-4 h-4" />, color: "bg-red-50 text-red-700 border-red-200", label: "Return Rejected" };
+      case 'RETURNED': return { icon: <RotateCcw className="w-4 h-4" />, color: "bg-emerald-50 text-emerald-700 border-emerald-200", label: "Returned" };
       case 'REFUNDED': return { icon: <CreditCard className="w-4 h-4" />, color: "bg-slate-50 text-slate-700 border-slate-200", label: "Refunded" };
       default: return { icon: <Clock className="w-4 h-4" />, color: "bg-neutral-50 text-neutral-700 border-neutral-200", label: status };
     }
@@ -60,10 +105,10 @@ export function OrderCard({ order }: OrderCardProps) {
         {order.orderItems.map((item: any) => (
           <div key={item.id} className="flex items-center gap-6 group/item">
             <div className="w-20 h-20 bg-[#FDFBF7] relative rounded-xl overflow-hidden border border-primary/5 flex-shrink-0 group-hover/item:border-primary/20 transition-colors">
-               {item.product.productImages[0] || item.productImage ? (
+               {item.productImage || (item.product && item.product.productImages && item.product.productImages[0]?.url) ? (
                  <img 
                     src={item.productImage || item.product.productImages[0]?.url} 
-                    alt={item.productName || item.product.name} 
+                    alt={item.productName || (item.product && item.product.name)} 
                     className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover/item:scale-110" 
                  />
                ) : (
@@ -72,15 +117,18 @@ export function OrderCard({ order }: OrderCardProps) {
             </div>
             <div className="flex-1 space-y-1">
               <Link 
-                href={`/product/${item.product.slug}`} 
-                className="font-serif text-lg text-primary hover:text-primary/70 transition-colors"
+                href={item.product ? `/product/${item.product.slug}` : "#"} 
+                className={cn(
+                  "font-serif text-lg text-primary hover:text-primary/70 transition-colors",
+                  !item.product && "pointer-events-none"
+                )}
               >
-                {item.productName || item.product.name}
+                {item.productName || (item.product && item.product.name)}
               </Link>
               <div className="flex items-center gap-3 text-xs text-muted-foreground font-light tracking-wide">
                 <span>Qty: {item.quantity}</span>
                 <span className="w-1 h-1 bg-primary/20 rounded-full"></span>
-                <span>Variant: {item.variantName || item.variant.name}</span>
+                <span>Variant: {item.variantName || (item.variant && item.variant.name)}</span>
               </div>
             </div>
             <div className="text-right">
@@ -122,6 +170,30 @@ export function OrderCard({ order }: OrderCardProps) {
               </a>
             </Button>
           )}
+
+          {canCancel && (
+            <Button 
+              onClick={() => setShowCancelDialog(true)}
+              variant="outline" 
+              size="sm" 
+              className="text-[10px] uppercase tracking-[0.1em] font-bold rounded-full border-red-200 text-red-600 hover:bg-red-50 transition-all gap-2"
+            >
+              <AlertCircle className="w-3 h-3" />
+              Cancel Order
+            </Button>
+          )}
+
+          {canReturn && (
+            <Button 
+              onClick={() => setShowReturnDialog(true)}
+              variant="outline" 
+              size="sm" 
+              className="text-[10px] uppercase tracking-[0.1em] font-bold rounded-full border-orange-200 text-orange-600 hover:bg-orange-50 transition-all gap-2"
+            >
+              <RotateCcw className="w-3 h-3" />
+              Return Order
+            </Button>
+          )}
         </div>
 
         <div className="flex items-center gap-4">
@@ -138,6 +210,79 @@ export function OrderCard({ order }: OrderCardProps) {
            </Link>
         </div>
       </div>
+
+      {/* Action Dialogs */}
+      <OrderActionDialog 
+        isOpen={showCancelDialog}
+        onClose={() => setShowCancelDialog(false)}
+        title="Cancel Order"
+        description="Please provide a reason for cancelling your order. This helps us improve our service."
+        placeholder="Reason for cancellation..."
+        actionLabel="Cancel Order"
+        onConfirm={(reason) => handleCancel(reason)}
+        isLoading={isSubmitting}
+      />
+
+      <OrderActionDialog 
+        isOpen={showReturnDialog}
+        onClose={() => setShowReturnDialog(false)}
+        title="Return Order"
+        description="Please provide a reason for returning this order. Our team will review your request."
+        placeholder="Reason for return..."
+        actionLabel="Request Return"
+        onConfirm={(reason) => handleReturn(reason)}
+        isLoading={isSubmitting}
+      />
     </div>
+  );
+}
+
+interface OrderActionDialogProps {
+  isOpen: boolean;
+  onClose: () => void;
+  title: string;
+  description: string;
+  placeholder: string;
+  actionLabel: string;
+  onConfirm: (reason: string) => void;
+  isLoading: boolean;
+}
+
+function OrderActionDialog({ 
+  isOpen, onClose, title, description, placeholder, actionLabel, onConfirm, isLoading 
+}: OrderActionDialogProps) {
+  const [reason, setReason] = useState("");
+
+  return (
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="sm:max-w-[425px] bg-white border-primary/10">
+        <DialogHeader>
+          <DialogTitle className="font-serif text-2xl text-primary">{title}</DialogTitle>
+          <DialogDescription className="text-muted-foreground font-light italic">
+            {description}
+          </DialogDescription>
+        </DialogHeader>
+        <div className="py-4">
+          <Textarea 
+            value={reason}
+            onChange={(e) => setReason(e.target.value)}
+            placeholder={placeholder}
+            className="min-h-[100px] border-primary/10 focus-visible:ring-primary/20"
+          />
+        </div>
+        <DialogFooter>
+          <Button variant="ghost" onClick={onClose} disabled={isLoading} className="text-xs uppercase tracking-widest">
+            Close
+          </Button>
+          <Button 
+            onClick={() => onConfirm(reason)} 
+            disabled={isLoading || !reason.trim()}
+            className="bg-primary hover:bg-primary/90 text-white px-6 rounded-full text-xs uppercase tracking-widest h-10"
+          >
+            {isLoading ? "Processing..." : actionLabel}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }

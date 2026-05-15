@@ -22,7 +22,10 @@ const statusMap: Record<string, any> = {
   SHIPPED: { color: "bg-purple-100 text-purple-800", label: "Shipped" },
   DELIVERED: { color: "bg-emerald-100 text-emerald-800", label: "Delivered" },
   CANCELLED: { color: "bg-red-100 text-red-800", label: "Cancelled" },
-  RETURNED: { color: "bg-orange-100 text-orange-800", label: "Returned" },
+  RETURN_REQUESTED: { color: "bg-orange-100 text-orange-800", label: "Return Requested" },
+  RETURN_APPROVED: { color: "bg-blue-100 text-blue-800", label: "Return Approved" },
+  RETURN_REJECTED: { color: "bg-red-100 text-red-800", label: "Return Rejected" },
+  RETURNED: { color: "bg-emerald-100 text-emerald-800", label: "Returned" },
   REFUNDED: { color: "bg-slate-100 text-slate-800", label: "Refunded" },
 };
 
@@ -112,7 +115,7 @@ export default function OrdersPage() {
       )}
 
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
-        <DialogContent className="sm:max-w-[600px] bg-background">
+        <DialogContent className="sm:max-w-[600px] max-h-[95vh] overflow-hidden bg-background flex flex-col">
           <DialogHeader className="border-b border-gray-500/10">
             <DialogTitle>Order Details</DialogTitle>
           </DialogHeader>
