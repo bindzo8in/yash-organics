@@ -26,8 +26,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 
-export const dynamic = 'force-dynamic';
-export const revalidate = 0;
+
 
 export default function DashboardPage() {
   const { data, isLoading } = useQuery({

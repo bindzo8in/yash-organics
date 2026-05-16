@@ -17,39 +17,21 @@ interface Category {
   children?: Category[];
 }
 
-export function Navbar() {
+export function Navbar({ categories }: { categories: Category[] }) {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [categories, setCategories] = useState<Category[]>([]);
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
   const pathname = usePathname();
   const { totalItems } = useCart();
-  const isHome = pathname === "/";
 
   useEffect(() => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 50);
     };
     window.addEventListener("scroll", handleScroll);
-    
-    // Fetch categories
-    const fetchCategories = async () => {
-      try {
-        const response = await fetch("/api/categories?filter=parents");
-        if (response.ok) {
-          const data = await response.json();
-          setCategories(data);
-        }
-      } catch (error) {
-        console.error("Failed to fetch categories:", error);
-      }
-    };
-
-    fetchCategories();
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // const isTransparent = !isScrolled && isHome; // No longer using transparent navbar for better contrast
   const itemCount = totalItems();
 
   return (

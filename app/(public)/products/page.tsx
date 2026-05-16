@@ -2,8 +2,6 @@ import { Metadata } from "next";
 import { ProductListingPage } from "@/components/sections/product-listing/product-listing-page";
 import { ChevronRight, Home } from "lucide-react";
 import Link from "next/link";
-import { Navbar } from "@/components/layout/navbar";
-import { Footer } from "@/components/layout/footer";
 import { getProducts, getCategories, getPriceRange } from "@/lib/services/product.service";
 
 export const dynamic = 'force-dynamic';
@@ -55,9 +53,7 @@ export default async function ProductsPage({ searchParams }: PageProps) {
   });
 
   return (
-    <div className="min-h-screen bg-[#FDFBF7]">
-      <Navbar />
-      
+    <div className="bg-[#FDFBF7]">
       {/* Hero Section */}
       <section className="bg-[#F6F1EB] pt-32 pb-20 px-6 lg:px-12 text-center">
         <div className="max-w-4xl mx-auto">
@@ -90,8 +86,6 @@ export default async function ProductsPage({ searchParams }: PageProps) {
           priceRange={priceRange}
         />
       </section>
-
-      <Footer />
     </div>
   );
 }

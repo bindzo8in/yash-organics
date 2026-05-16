@@ -82,3 +82,20 @@ export async function getParentCategories(): Promise<Category[]> {
   }));
 }
 
+export async function getNavbarCategories() {
+  const categories = await prisma.category.findMany({
+    where: { 
+      isActive: true,
+      parentId: null 
+    },
+    include: {
+      children: {
+        where: { isActive: true },
+        orderBy: { order: "asc" }
+      }
+    },
+    orderBy: { order: "asc" }
+  });
+
+  return categories;
+}
