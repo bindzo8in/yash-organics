@@ -23,15 +23,15 @@ export function ProductInfo({ product }: ProductInfoProps) {
   const [isAdding, setIsAdding] = useState(false);
   const [openSection, setOpenSection] = useState<string | null>("benefits");
   
+  const currentPrice = selectedVariant?.sellingPrice || 0;
+  const currentMRP = selectedVariant?.mrp;
+  const currentStock = selectedVariant?.stock || 0;
+  
   const existingItem = cart.items.find(i => 
     i.id === product.id && (i.variantId || null) === (selectedVariant?.id || null)
   );
   const existingQty = existingItem?.quantity || 0;
   const maxAllowed = Math.max(0, currentStock - existingQty);
-
-  const currentPrice = selectedVariant?.sellingPrice || 0;
-  const currentMRP = selectedVariant?.mrp;
-  const currentStock = selectedVariant?.stock || 0;
   
   const discount = currentMRP ? Math.round(((currentMRP - currentPrice) / currentMRP) * 100) : 0;
 
