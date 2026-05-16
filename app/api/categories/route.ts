@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { auth } from "@/auth";
-import { Role } from "@/app/generated/prisma/enums";
+import { Role } from "@/app/generated/prisma";
 import { categorySchema } from "@/lib/validators/category";
 
 export async function GET(req: Request) {

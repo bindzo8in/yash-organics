@@ -12,7 +12,7 @@ export default function AuthLayout({
       <header className="p-8 flex justify-center">
         <Link href="/">
           <Image 
-            src="/logo/logo_rect.jpeg" 
+            src="/logo/logo-rect.webp" 
             alt="Yash Organics" 
             width={180} 
             height={50} 
@@ -30,7 +30,7 @@ export default function AuthLayout({
       {/* Simple Footer */}
       <footer className="p-8 text-center">
         <p className="text-[10px] uppercase tracking-widest text-muted-foreground">
-          © 2026 Yash Organics. All rights reserved.
+          © {new Date().getFullYear()} Yash Organics. All rights reserved.
         </p>
       </footer>
     </div>

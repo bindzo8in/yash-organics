@@ -68,7 +68,7 @@ export function AdminSidebar() {
       <SidebarHeader className="h-16 flex items-center px-4">
         <div className="flex items-center gap-3">
           <Image 
-            src="/logo/logo_sq.jpeg" 
+            src="/logo/logo-sq.webp" 
             alt="Yash Organics" 
             width={32} 
             height={32} 
