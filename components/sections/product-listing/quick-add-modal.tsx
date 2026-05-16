@@ -24,6 +24,15 @@ export function QuickAddModal({ product, isOpen, onClose }: QuickAddModalProps) 
   const [quantity, setQuantity] = useState(1);
   const cart = useCart();
 
+  const currentVariant = selectedVariant || (product?.variants?.[0] as ProductVariant) || null;
+  const currentStock = currentVariant?.stock || 0;
+
+  const existingItem = cart.items.find(i => 
+    i.id === product?.id && (i.variantId || null) === (currentVariant?.id || null)
+  );
+  const existingQty = existingItem?.quantity || 0;
+  const maxAllowed = Math.max(0, currentStock - existingQty);
+
   // Reset state when product changes or modal opens
   useEffect(() => {
     if (product && product.variants && product.variants.length > 0) {
@@ -35,16 +44,16 @@ export function QuickAddModal({ product, isOpen, onClose }: QuickAddModalProps) 
   if (!product) return null;
 
   const variants = product.variants || [];
-  const currentVariant = selectedVariant || variants[0];
 
   const handleAddToCart = () => {
-    if (!currentVariant) return;
+    if (!currentVariant || maxAllowed <= 0) return;
 
     const cartProduct = {
       ...product,
-      price: currentVariant.sellingPrice,
+      sellingPrice: currentVariant.sellingPrice,
       variantId: currentVariant.id,
       variantName: currentVariant.name,
+      stock: currentStock,
     };
 
     cart.addItem(cartProduct as any, quantity);
@@ -157,14 +166,15 @@ export function QuickAddModal({ product, isOpen, onClose }: QuickAddModalProps) 
                       <button 
                         onClick={() => setQuantity(q => Math.max(1, q - 1))}
                         className="w-10 h-full flex items-center justify-center hover:bg-[#F6F1EB] transition-colors disabled:opacity-20"
-                        disabled={quantity <= 1}
+                        disabled={quantity <= 1 || currentStock === 0}
                       >
                         <Minus className="w-3.5 h-3.5" />
                       </button>
                       <span className="flex-1 text-center text-sm font-medium tabular-nums">{quantity}</span>
                       <button 
-                        onClick={() => setQuantity(q => q + 1)}
-                        className="w-10 h-full flex items-center justify-center hover:bg-[#F6F1EB] transition-colors"
+                        onClick={() => setQuantity(q => Math.min(maxAllowed, q + 1))}
+                        className="w-10 h-full flex items-center justify-center hover:bg-[#F6F1EB] transition-colors disabled:opacity-20"
+                        disabled={quantity >= maxAllowed || currentStock === 0}
                       >
                         <Plus className="w-3.5 h-3.5" />
                       </button>
@@ -176,9 +186,10 @@ export function QuickAddModal({ product, isOpen, onClose }: QuickAddModalProps) 
                   <Button 
                     className="w-full rounded-none h-14 uppercase tracking-[0.25em] text-[10px] font-bold shadow-lg shadow-primary/10 hover:shadow-primary/20 transition-all duration-500"
                     onClick={handleAddToCart}
+                    disabled={currentStock === 0 || maxAllowed === 0}
                   >
                     <ShoppingCart className="w-4 h-4 mr-3" />
-                    Add to Cart
+                    {currentStock === 0 ? "Out of Stock" : maxAllowed === 0 ? "Limit Reached" : "Add to Cart"}
                   </Button>
                 </div>
                 

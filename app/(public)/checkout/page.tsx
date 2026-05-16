@@ -33,6 +33,7 @@ export default function CheckoutPage() {
   const [deliveryEstimate, setDeliveryEstimate] = useState<DeliveryEstimate | null>(null);
   const [isCheckingDelivery, setIsCheckingDelivery] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
 
   useEffect(() => {
     setIsMounted(true);
@@ -131,6 +132,7 @@ export default function CheckoutPage() {
             });
 
             if (verification.success) {
+              setIsSuccess(true);
               toast.success("Payment successful!");
               clearCart();
               router.push(`/order-status/${result.orderId}`);
@@ -170,10 +172,10 @@ export default function CheckoutPage() {
   };
 
   useEffect(() => {
-    if (isMounted && items.length === 0) {
+    if (isMounted && items.length === 0 && !isSuccess) {
       router.push("/cart");
     }
-  }, [isMounted, items.length, router]);
+  }, [isMounted, items.length, router, isSuccess]);
 
   if (!isMounted) return null;
   if (items.length === 0) return null;

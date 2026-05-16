@@ -30,6 +30,7 @@ export const useCart = create<CartStore>()(
       addItem: (product, quantity = 1) => {
         const currentItems = get().items;
         const cartProduct = product as CartItem;
+        const stockLimit = cartProduct.stock || 0;
         
         // Use a consistent comparison for variantId (normalize null/undefined)
         const existingItemIndex = currentItems.findIndex((item) => 
@@ -38,13 +39,36 @@ export const useCart = create<CartStore>()(
         );
 
         if (existingItemIndex > -1) {
+          const currentQty = currentItems[existingItemIndex].quantity;
+          const newQty = currentQty + quantity;
+          
+          if (newQty > stockLimit) {
+            toast.error("Stock limit reached", {
+              description: `Only ${stockLimit} units available. You already have ${currentQty} in your cart.`,
+            });
+            // Update to max stock if not already there
+            if (currentQty < stockLimit) {
+              const updatedItems = [...currentItems];
+              updatedItems[existingItemIndex].quantity = stockLimit;
+              set({ items: updatedItems });
+            }
+            return;
+          }
+
           const updatedItems = [...currentItems];
           updatedItems[existingItemIndex] = {
             ...updatedItems[existingItemIndex],
-            quantity: updatedItems[existingItemIndex].quantity + quantity
+            quantity: newQty
           };
           set({ items: updatedItems });
         } else {
+          if (quantity > stockLimit) {
+            toast.error("Stock limit reached", {
+              description: `Only ${stockLimit} units available.`,
+            });
+            set({ items: [...currentItems, { ...cartProduct, quantity: stockLimit }] });
+            return;
+          }
           set({ items: [...currentItems, { ...cartProduct, quantity }] });
         }
       },
@@ -59,11 +83,19 @@ export const useCart = create<CartStore>()(
 
       updateQuantity: (productId, quantity, variantId) => {
         const currentItems = get().items;
-        const updatedItems = currentItems.map((item) =>
-          item.id === productId && (item.variantId || null) === (variantId || null)
-            ? { ...item, quantity: Math.max(1, quantity) }
-            : item
-        );
+        const updatedItems = currentItems.map((item) => {
+          if (item.id === productId && (item.variantId || null) === (variantId || null)) {
+            const stockLimit = item.stock || 0;
+            const requestedQty = Math.max(1, quantity);
+            
+            if (requestedQty > stockLimit) {
+              toast.error(`Only ${stockLimit} units in stock`);
+              return { ...item, quantity: stockLimit };
+            }
+            return { ...item, quantity: requestedQty };
+          }
+          return item;
+        });
         set({ items: updatedItems });
       },
 

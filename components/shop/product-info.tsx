@@ -22,6 +22,12 @@ export function ProductInfo({ product }: ProductInfoProps) {
   const [quantity, setQuantity] = useState(1);
   const [isAdding, setIsAdding] = useState(false);
   const [openSection, setOpenSection] = useState<string | null>("benefits");
+  
+  const existingItem = cart.items.find(i => 
+    i.id === product.id && (i.variantId || null) === (selectedVariant?.id || null)
+  );
+  const existingQty = existingItem?.quantity || 0;
+  const maxAllowed = Math.max(0, currentStock - existingQty);
 
   const currentPrice = selectedVariant?.sellingPrice || 0;
   const currentMRP = selectedVariant?.mrp;
@@ -161,15 +167,15 @@ export function ProductInfo({ product }: ProductInfoProps) {
               <button 
                 onClick={() => setQuantity(Math.max(1, quantity - 1))}
                 className="w-10 h-full flex items-center justify-center hover:text-primary transition-colors disabled:opacity-30"
-                disabled={currentStock === 0}
+                disabled={currentStock === 0 || quantity <= 1}
               >
                 <Minus className="h-3.5 w-3.5" />
               </button>
               <span className="w-10 text-center font-serif text-lg">{quantity}</span>
               <button 
-                onClick={() => setQuantity(Math.min(currentStock, quantity + 1))}
+                onClick={() => setQuantity(Math.min(maxAllowed, quantity + 1))}
                 className="w-10 h-full flex items-center justify-center hover:text-primary transition-colors disabled:opacity-30"
-                disabled={currentStock === 0}
+                disabled={currentStock === 0 || quantity >= maxAllowed}
               >
                 <Plus className="h-3.5 w-3.5" />
               </button>
@@ -178,7 +184,7 @@ export function ProductInfo({ product }: ProductInfoProps) {
             {/* Add to Bag Button */}
             <Button 
               onClick={handleAddToCart}
-              disabled={isAdding || currentStock === 0}
+              disabled={isAdding || currentStock === 0 || maxAllowed === 0}
               className="flex-1 h-14 text-sm font-bold bg-primary hover:bg-primary/90 rounded-none shadow-lg transition-all active:scale-[0.98] flex items-center justify-center gap-3"
             >
               {isAdding ? (
