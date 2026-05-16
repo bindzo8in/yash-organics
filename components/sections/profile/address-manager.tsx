@@ -10,11 +10,12 @@ import { cn } from "@/lib/utils";
 
 interface AddressManagerProps {
   onSelect?: (addressId: string) => void;
+  onAddressesChange?: (addresses: any[]) => void;
   selectedId?: string;
   isSelectionMode?: boolean;
 }
 
-export function AddressManager({ onSelect, selectedId, isSelectionMode = false }: AddressManagerProps) {
+export function AddressManager({ onSelect, onAddressesChange, selectedId, isSelectionMode = false }: AddressManagerProps) {
   const [addresses, setAddresses] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [isAdding, setIsAdding] = useState(false);
@@ -28,6 +29,7 @@ export function AddressManager({ onSelect, selectedId, isSelectionMode = false }
     try {
       const data = await getAddresses();
       setAddresses(data);
+      onAddressesChange?.(data);
       if (isSelectionMode && data.length > 0 && !selectedId) {
         const defaultAddr = data.find(a => a.isDefault) || data[0];
         onSelect?.(defaultAddr.id);
@@ -147,17 +149,29 @@ export function AddressManager({ onSelect, selectedId, isSelectionMode = false }
                 };
 
                 try {
-                  const result = editingAddress 
-                    ? await updateAddress(editingAddress.id, data)
-                    : await createAddress(data);
-
-                  if (result?.success) {
-                    toast.success(editingAddress ? "Address updated" : "Address added successfully");
-                    setIsAdding(false);
-                    setEditingAddress(null);
-                    loadAddresses();
+                  if (editingAddress) {
+                    const result = await updateAddress(editingAddress.id, data);
+                    if (result.success) {
+                      toast.success("Address updated");
+                      setIsAdding(false);
+                      setEditingAddress(null);
+                      await loadAddresses();
+                    } else {
+                      toast.error("Failed to update address");
+                    }
                   } else {
-                    toast.error("Failed to save address");
+                    const result = await createAddress(data);
+                    if (result.success) {
+                      toast.success("Address added successfully");
+                      setIsAdding(false);
+                      setEditingAddress(null);
+                      await loadAddresses();
+                      if (result.address?.id) {
+                        onSelect?.(result.address.id);
+                      }
+                    } else {
+                      toast.error("Failed to save address");
+                    }
                   }
                 } catch (e: any) {
                   toast.error(e.message || "An unexpected error occurred");

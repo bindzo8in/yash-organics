@@ -38,18 +38,7 @@ export default function CheckoutPage() {
     setIsMounted(true);
   }, []);
 
-  // Load Razorpay Script
-  useEffect(() => {
-    // Initial load of addresses to get default pincode
-    loadAddresses();
-  }, []);
-
-  const loadAddresses = async () => {
-    const data = await getAddresses();
-    setAddresses(data);
-    const defaultAddr = data.find(a => a.isDefault) || data[0];
-    if (defaultAddr) setSelectedAddressId(defaultAddr.id);
-  };
+  // Razorpay script load state is handled by the Script component's onReady
 
   const selectedAddress = useMemo(() => 
     addresses.find(a => a.id === selectedAddressId),
@@ -58,6 +47,8 @@ export default function CheckoutPage() {
   const currentTotal = totalPrice();
 
   useEffect(() => {
+    let isCancelled = false;
+
     const getDeliveryEstimate = async () => {
       if (!selectedAddress) {
         setDeliveryEstimate(null);
@@ -67,21 +58,31 @@ export default function CheckoutPage() {
       setIsCheckingDelivery(true);
       try {
         const estimate = await checkDeliveryAvailability(selectedAddress.postalCode, currentTotal);
-        setDeliveryEstimate(estimate);
+        if (!isCancelled) {
+          setDeliveryEstimate(estimate);
+        }
       } catch (err) {
         console.error("Error checking delivery:", err);
-        setDeliveryEstimate({
-          isAvailable: false,
-          deliveryCharge: 0,
-          estimatedDays: 0,
-          message: "Failed to verify delivery availability."
-        });
+        if (!isCancelled) {
+          setDeliveryEstimate({
+            isAvailable: false,
+            deliveryCharge: 0,
+            estimatedDays: 0,
+            message: "Failed to verify delivery availability."
+          });
+        }
       } finally {
-        setIsCheckingDelivery(false);
+        if (!isCancelled) {
+          setIsCheckingDelivery(false);
+        }
       }
     };
 
     getDeliveryEstimate();
+
+    return () => {
+      isCancelled = true;
+    };
   }, [selectedAddress, currentTotal]);
 
   const totalPayable = useMemo(() => {
@@ -197,10 +198,8 @@ export default function CheckoutPage() {
               <AddressManager 
                 isSelectionMode 
                 selectedId={selectedAddressId || undefined}
-                onSelect={(id) => {
-                  setSelectedAddressId(id);
-                  loadAddresses(); // Refresh addresses list
-                }} 
+                onSelect={(id) => setSelectedAddressId(id)}
+                onAddressesChange={(data) => setAddresses(data)}
               />
               {!selectedAddressId && (
                 <div className="mt-4 p-4 border border-amber-200 bg-amber-50 text-amber-800 text-sm flex items-center gap-3">
