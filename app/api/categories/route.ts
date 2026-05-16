@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { auth } from "@/auth";
-import { Role } from "@/app/generated/prisma";
+import { Role } from "@/app/generated/prisma/enums";
 import { categorySchema } from "@/lib/validators/category";
 
 export const dynamic = 'force-dynamic';
