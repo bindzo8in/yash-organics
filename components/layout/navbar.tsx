@@ -49,7 +49,7 @@ export function Navbar() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  const isTransparent = !isScrolled && isHome;
+  // const isTransparent = !isScrolled && isHome; // No longer using transparent navbar for better contrast
   const itemCount = totalItems();
 
   return (
@@ -57,10 +57,8 @@ export function Navbar() {
       className={cn(
         "fixed top-0 left-0 right-0 z-50 transition-all duration-500 px-6",
         isScrolled 
-          ? "bg-background/80 backdrop-blur-md border-b border-border/50 py-3 text-foreground" 
-          : isTransparent
-            ? "bg-background/20 py-6 text-white"
-            : "bg-background py-4 text-foreground border-b border-border/10"
+          ? "bg-background/95 backdrop-blur-md border-b border-border/50 py-3 text-foreground shadow-sm" 
+          : "bg-background py-5 text-foreground border-b border-border/10"
       )}
     >
       <div className="max-w-7xl mx-auto flex items-center justify-between">
@@ -140,11 +138,10 @@ export function Navbar() {
           <Image 
             src="/logo/logo-rect.webp" 
             alt="Yash Organics" 
-            width={160} 
-            height={50} 
+            width={200} 
+            height={64} 
             className={cn(
-              "h-10 w-auto object-contain transition-all duration-300",
-              
+              "h-12 md:h-16 w-auto object-contain transition-all duration-300",
             )}
             priority
           />
@@ -169,8 +166,7 @@ export function Navbar() {
               <ShoppingBag className="h-5 w-5" />
               {itemCount > 0 && (
                 <span className={cn(
-                  "absolute -top-1 -right-1 min-w-[18px] h-[18px] flex items-center justify-center rounded-full text-[10px] font-bold transition-transform group-hover:scale-110 px-1",
-                  isTransparent ? "bg-emerald-400 text-black shadow-[0_0_10px_rgba(52,211,153,0.5)]" : "bg-primary text-white"
+                  "absolute -top-1 -right-1 min-w-[18px] h-[18px] flex items-center justify-center rounded-full text-[10px] font-bold transition-transform group-hover:scale-110 px-1 bg-primary text-white"
                 )}>
                   {itemCount}
                 </span>

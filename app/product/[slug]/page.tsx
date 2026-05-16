@@ -8,6 +8,9 @@ import { ProductInfo } from "@/components/shop/product-info";
 import { ProductGallery } from "@/components/shop/product-gallery";
 import { getImageUrl } from "@/lib/cloudinary-utils";
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 interface ProductPageProps {
   params: Promise<{
     slug: string;

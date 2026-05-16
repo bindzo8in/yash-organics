@@ -4,6 +4,9 @@ import { auth } from "@/auth";
 import { razorpay } from "@/lib/razorpay";
 import { calculateDeliveryCharge } from "@/lib/delivery";
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export async function POST(req: Request) {
   const session = await auth();
   if (!session?.user?.id) {

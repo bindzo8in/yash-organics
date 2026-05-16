@@ -6,6 +6,9 @@ import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
 import { getProducts, getCategories, getPriceRange } from "@/lib/services/product.service";
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export const metadata: Metadata = {
   title: "Premium Organic Products | YASH Organics",
   description: "Shop our curated collection of natural herbal, organic, skin care, hair care, and wellness products. Pure nature, bottled with love.",
