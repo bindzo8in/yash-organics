@@ -13,7 +13,6 @@ import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
 import { Loader2, ShieldCheck, Truck, CreditCard, ChevronRight } from "lucide-react";
 import Image from "next/image";
-import { getAddresses } from "@/lib/actions/address.actions";
 import { cn } from "@/lib/utils";
 import { env } from "@/lib/env";
 
@@ -38,8 +37,6 @@ export default function CheckoutPage() {
   useEffect(() => {
     setIsMounted(true);
   }, []);
-
-  // Razorpay script load state is handled by the Script component's onReady
 
   const selectedAddress = useMemo(() => 
     addresses.find(a => a.id === selectedAddressId),
@@ -138,10 +135,12 @@ export default function CheckoutPage() {
               router.push(`/order-status/${result.orderId}`);
             } else {
               toast.error(verification.error || "Payment verification failed");
+              router.push(`/order-status/${result.orderId}`);
             }
           } catch (err: any) {
             console.error(err)
-            toast.error("Payment verification failed. Please contact support.");
+            toast.error("Payment verification failed. Redirecting to status page.");
+            router.push(`/order-status/${result.orderId}`);
           }
         },
         prefill: {
@@ -155,14 +154,18 @@ export default function CheckoutPage() {
         modal: {
           ondismiss: function() {
             setLoading(false);
+            // Redirect even if dismissed to show current order state
+            router.push(`/order-status/${result.orderId}`);
           }
         }
       };
 
       const rzp = new window.Razorpay(options);
       rzp.on("payment.failed", function (response: any) {
-        toast.error("Payment failed. Please try again.");
+        console.error("Payment failure:", response.error);
+        toast.error("Payment failed. View order status for details.");
         setLoading(false);
+        router.push(`/order-status/${result.orderId}`);
       });
       rzp.open();
     } catch (error: any) {

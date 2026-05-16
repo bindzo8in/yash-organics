@@ -61,17 +61,21 @@ export default async function ProductPage({ params }: ProductPageProps) {
   }
 
   return (
-    <div className="pt-32 pb-24 px-6">
-      <div className="max-w-7xl mx-auto">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 xl:gap-24">
-          {/* Left: Product Images */}
-          <ProductGallery 
-            images={product.productImages.map(img => getImageUrl(img.url))} 
-            name={product.name} 
-          />
+    <div className="pt-32 pb-24 px-6 lg:px-12">
+      <div className="max-w-[1400px] mx-auto">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 xl:gap-24 items-start">
+          {/* Left: Product Images (Amazon Style) */}
+          <div className="lg:col-span-7">
+            <ProductGallery 
+              images={product.productImages.map(img => getImageUrl(img.url))} 
+              name={product.name} 
+            />
+          </div>
 
-          {/* Right: Product Details */}
-          <ProductInfo product={product} />
+          {/* Right: Product Details (Sticky) */}
+          <div className="lg:col-span-5 lg:sticky lg:top-32">
+            <ProductInfo product={product} />
+          </div>
         </div>
 
         {/* The Product Story Section - Aesthetic & Professional */}
@@ -123,7 +127,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
                   </h2>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-12 text-left">
-                  {product.usage.split("\n").filter(u => u.trim()).slice(0, 3).map((step, i) => (
+                  {product.usage.split("\n").filter(u => u.trim()).map((step, i) => (
                     <div key={i} className="space-y-4 relative">
                       <div className="w-10 h-10 rounded-full border border-primary/20 flex items-center justify-center text-xs font-serif text-primary italic">
                         {i + 1}

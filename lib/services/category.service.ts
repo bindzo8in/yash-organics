@@ -8,13 +8,15 @@ export async function getFeaturedCategories(): Promise<Category[]> {
       parentId: null // Only get root categories for featured section
     },
     include: {
-      _count: {
-        select: { products: true }
+      products: {
+        where: { isActive: true, deletedAt: null },
+        select: { id: true }
       },
       children: {
-        select: {
-          _count: {
-            select: { products: true }
+        include: {
+          products: {
+            where: { isActive: true, deletedAt: null },
+            select: { id: true }
           }
         }
       }
@@ -30,7 +32,7 @@ export async function getFeaturedCategories(): Promise<Category[]> {
     description: cat.description,
     image: cat.image,
     parentId: cat.parentId,
-    productCount: cat._count.products + ((cat as any).children?.reduce((acc: number, child: any) => acc + child._count.products, 0) || 0)
+    productCount: cat.products.length + ((cat as any).children?.reduce((acc: number, child: any) => acc + child.products.length, 0) || 0)
   }));
 }
 
@@ -38,13 +40,15 @@ export async function getAllCategories(): Promise<Category[]> {
   const categories = await prisma.category.findMany({
     where: { isActive: true },
     include: {
-      _count: {
-        select: { products: true }
+      products: {
+        where: { isActive: true, deletedAt: null },
+        select: { id: true }
       },
       children: {
-        select: {
-          _count: {
-            select: { products: true }
+        include: {
+          products: {
+            where: { isActive: true, deletedAt: null },
+            select: { id: true }
           }
         }
       }
@@ -59,7 +63,7 @@ export async function getAllCategories(): Promise<Category[]> {
     description: cat.description,
     image: cat.image,
     parentId: cat.parentId,
-    productCount: cat._count.products + ((cat as any).children?.reduce((acc: number, child: any) => acc + child._count.products, 0) || 0)
+    productCount: cat.products.length + ((cat as any).children?.reduce((acc: number, child: any) => acc + child.products.length, 0) || 0)
   }));
 }
 
