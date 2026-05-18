@@ -21,6 +21,7 @@ export const env = createEnv({
     NEXT_PUBLIC_SITE_URL: z.string().url(),
     NEXT_PUBLIC_SITE_NAME: z.string(),
     NEXT_PUBLIC_EMAIL_ENGINE_MAIL: z.string().email(),
+    NEXT_PUBLIC_ADMIN_EMAIL: z.string().email(),
   },
   runtimeEnv: {
     DATABASE_URL: process.env.DATABASE_URL,
@@ -38,5 +39,6 @@ export const env = createEnv({
     AUTH_TRUST_HOST: process.env.AUTH_TRUST_HOST,
     NEXT_PUBLIC_SITE_NAME: process.env.NEXT_PUBLIC_SITE_NAME,
     NEXT_PUBLIC_EMAIL_ENGINE_MAIL: process.env.NEXT_PUBLIC_EMAIL_ENGINE_MAIL,
+    NEXT_PUBLIC_ADMIN_EMAIL: process.env.NEXT_PUBLIC_ADMIN_EMAIL,
   },
 });

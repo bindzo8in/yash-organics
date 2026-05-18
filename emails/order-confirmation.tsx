@@ -7,6 +7,7 @@ import {
   Preview,
   Section,
   Text,
+  Heading,
 } from "@react-email/components";
 import * as React from "react";
 
@@ -28,17 +29,34 @@ export const OrderConfirmationEmail = ({
       <Container style={container}>
         <Section style={logoSection}>
            <Text style={logoText}>YASH ORGANICS</Text>
+           <Text style={tagline}>Pure. Organic. Handcrafted.</Text>
         </Section>
-        <Text style={paragraph}>Hi {userFirstname},</Text>
-        <Text style={paragraph}>
-          Thank you for your order! We have received your payment of ₹{totalAmount.toFixed(2)} for Order #{orderId.slice(-6).toUpperCase()}.
-        </Text>
-        <Text style={paragraph}>
-          We are currently processing your order and will notify you once it has been shipped.
-        </Text>
+        <Section style={contentSection}>
+          <Heading style={heading}>Order Confirmed</Heading>
+          <Text style={paragraph}>Hi {userFirstname},</Text>
+          <Text style={paragraph}>
+            Thank you for shopping with us! Your order <strong>#{orderId.slice(-6).toUpperCase()}</strong> has been successfully placed. We've received your payment of <strong>₹{totalAmount.toFixed(2)}</strong>.
+          </Text>
+          
+          <div style={orderSummaryBox}>
+            <Text style={summaryLabel}>ORDER NUMBER</Text>
+            <Text style={summaryValue}>#{orderId.slice(-6).toUpperCase()}</Text>
+            <Text style={summaryLabel}>TOTAL AMOUNT</Text>
+            <Text style={summaryValue}>₹{totalAmount.toFixed(2)}</Text>
+            <Text style={summaryLabel}>PAYMENT STATUS</Text>
+            <Text style={summaryValue}>PAID</Text>
+          </div>
+
+          <Text style={paragraph}>
+            We are currently carefully preparing your organic products. You will receive another notification as soon as your order ships.
+          </Text>
+        </Section>
         <Hr style={hr} />
         <Text style={footer}>
-          Yash Organics | Pure. Organic. Handcrafted.
+          © {new Date().getFullYear()} Yash Organics. All rights reserved.
+        </Text>
+        <Text style={footerLinks}>
+          <a href="#" style={link}>Visit Store</a> • <a href="#" style={link}>Contact Support</a>
         </Text>
       </Container>
     </Body>
@@ -48,14 +66,22 @@ export const OrderConfirmationEmail = ({
 export default OrderConfirmationEmail;
 
 const main = {
-  backgroundColor: "#fdfcf0",
+  backgroundColor: "#f9fafb",
   fontFamily:
     '-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Oxygen-Sans,Ubuntu,Cantarell,"Helvetica Neue",sans-serif',
 };
 
-const container = { margin: "0 auto", padding: "20px 0 48px", maxWidth: "580px" };
-const logoSection = { textAlign: "center" as const, padding: "30px 0" };
-const logoText = { fontSize: "24px", letterSpacing: "4px", fontWeight: "bold", color: "#1b3022", textTransform: "uppercase" as const };
-const paragraph = { fontSize: "16px", lineHeight: "26px", color: "#444" };
-const hr = { borderColor: "#e0e0e0", margin: "20px 0" };
-const footer = { color: "#8898aa", fontSize: "12px", textTransform: "uppercase" as const, letterSpacing: "1px", textAlign: "center" as const };
+const container = { margin: "40px auto", padding: "0", maxWidth: "600px", backgroundColor: "#ffffff", borderRadius: "12px", overflow: "hidden", border: "1px solid #e5e7eb" };
+const logoSection = { textAlign: "center" as const, padding: "40px 20px", backgroundColor: "#1b3022" };
+const logoText = { fontSize: "28px", letterSpacing: "6px", fontWeight: "bold", color: "#ffffff", textTransform: "uppercase" as const, margin: "0" };
+const tagline = { fontSize: "12px", letterSpacing: "2px", color: "#a7f3d0", textTransform: "uppercase" as const, margin: "10px 0 0 0" };
+const contentSection = { padding: "40px 40px 20px" };
+const heading = { fontSize: "24px", color: "#111827", margin: "0 0 20px", fontWeight: "600" };
+const paragraph = { fontSize: "16px", lineHeight: "26px", color: "#4b5563", margin: "0 0 20px" };
+const orderSummaryBox = { backgroundColor: "#f3f4f6", padding: "24px", borderRadius: "8px", margin: "30px 0" };
+const summaryLabel = { fontSize: "11px", letterSpacing: "1px", color: "#6b7280", textTransform: "uppercase" as const, margin: "0 0 4px" };
+const summaryValue = { fontSize: "16px", color: "#111827", fontWeight: "600", margin: "0 0 16px" };
+const hr = { borderColor: "#e5e7eb", margin: "0" };
+const footer = { color: "#9ca3af", fontSize: "13px", textAlign: "center" as const, padding: "30px 20px 5px", margin: "0" };
+const footerLinks = { textAlign: "center" as const, padding: "0 20px 30px" };
+const link = { color: "#1b3022", textDecoration: "underline", fontSize: "13px", fontWeight: "500" };

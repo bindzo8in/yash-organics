@@ -6,7 +6,7 @@ import { razorpay } from "@/lib/razorpay";
 import { revalidatePath } from "next/cache";
 import crypto from "crypto";
 import { checkDeliveryAvailability } from "@/lib/services/delivery.service";
-import { sendOrderConfirmationEmail } from "@/lib/mail";
+import { sendOrderConfirmationEmail, sendAdminOrderNotificationEmail } from "@/lib/mail";
 import { clearDbCart } from "./cart.actions";
 
 export async function createOrder(data: {
@@ -320,6 +320,22 @@ export async function verifyPayment(data: {
           orderDetails.id,
           orderDetails.totalAmount
         );
+        
+        // Notify admin
+        await sendAdminOrderNotificationEmail(
+          orderDetails.id,
+          "NEW_ORDER",
+          orderDetails.totalAmount,
+          orderDetails.user.name
+        );
+        
+        await prisma.notification.create({
+          data: {
+            type: "NEW_ORDER",
+            message: `New order #${orderDetails.id.slice(-6).toUpperCase()} placed by ${orderDetails.user.name}`,
+            orderId: orderDetails.id,
+          }
+        });
       }
     }
 

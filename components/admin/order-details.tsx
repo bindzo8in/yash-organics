@@ -12,7 +12,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
-import { Truck, PackageCheck, CreditCard, AlertCircle, RotateCcw, CheckCircle2 } from "lucide-react";
+import { Truck, PackageCheck, CreditCard, AlertCircle, RotateCcw, CheckCircle2, Printer } from "lucide-react";
 import { updateOrderStatus, type OrderActionState } from "@/lib/actions/orders";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -77,7 +77,18 @@ export function OrderDetails({ order, onUpdate }: OrderDetailsProps) {
 
   return (
     <div className="max-h-[80vh] overflow-y-auto pr-4 -mr-4 scrollbar-thin scrollbar-thumb-primary/10 scrollbar-track-transparent">
-      <div className="space-y-6 pt-4">
+      <div className="flex justify-end mb-2">
+        <Button 
+          variant="outline" 
+          size="sm" 
+          className="h-8 gap-2"
+          onClick={() => window.open(`/admin/orders/${order.id}/print`, '_blank')}
+        >
+          <Printer className="h-4 w-4" />
+          Print Packing Slip
+        </Button>
+      </div>
+      <div className="space-y-6 pt-2">
       <div className="grid grid-cols-2 gap-8">
         <div className="space-y-4">
           <h4 className="font-semibold text-sm flex items-center gap-2">

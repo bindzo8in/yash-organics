@@ -3,6 +3,7 @@
 import { Resend } from "resend";
 import { ResetPasswordEmail } from "@/emails/reset-password";
 import { OrderConfirmationEmail } from "@/emails/order-confirmation";
+import { AdminOrderNotificationEmail } from "@/emails/admin-order-notification";
 import { VerifyOtpEmail } from "@/emails/verify-otp";
 import { env } from "./env";
 import { AdminContactEmail } from "@/components/emails/admin-contact-email";
@@ -48,6 +49,26 @@ export const sendOrderConfirmationEmail = async (email: string, name: string, or
     return { success: true };
   } catch (error) {
     console.error("Error sending order confirmation email:", error);
+    return { success: false, error };
+  }
+};
+
+export const sendAdminOrderNotificationEmail = async (orderId: string, type: "NEW_ORDER" | "ORDER_CANCELLED", totalAmount: number, customerName: string) => {
+  try {
+    await resend.emails.send({
+      from: `${env.NEXT_PUBLIC_SITE_NAME} <${env.NEXT_PUBLIC_EMAIL_ENGINE_MAIL}>`,
+      to: env.ADMIN_EMAIL,
+      subject: type === "NEW_ORDER" ? `New Order Received - #${orderId.slice(-6).toUpperCase()}` : `Order Cancelled - #${orderId.slice(-6).toUpperCase()}`,
+      react: AdminOrderNotificationEmail({
+        orderId,
+        type,
+        totalAmount,
+        customerName,
+      }),
+    });
+    return { success: true };
+  } catch (error) {
+    console.error("Error sending admin order notification email:", error);
     return { success: false, error };
   }
 };

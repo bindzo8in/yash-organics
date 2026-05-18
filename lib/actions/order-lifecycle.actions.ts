@@ -4,6 +4,7 @@ import prisma from "@/lib/prisma";
 import { auth } from "@/auth";
 import { revalidatePath } from "next/cache";
 import { canCancelOrder, canReturnOrder } from "@/lib/utils/order-logic";
+import { sendAdminOrderNotificationEmail } from "@/lib/mail";
 
 export type OrderActionResponse = {
   success: boolean;
@@ -18,7 +19,7 @@ export async function cancelOrder(orderId: string, reason: string): Promise<Orde
 
     const order = await prisma.order.findUnique({
       where: { id: orderId, userId },
-      include: { orderItems: true }
+      include: { orderItems: true, user: true }
     });
 
     if (!order) throw new Error("Order not found");
@@ -58,7 +59,24 @@ export async function cancelOrder(orderId: string, reason: string): Promise<Orde
           }
         });
       }
+      
+      // Create notification
+      await tx.notification.create({
+        data: {
+          type: "ORDER_CANCELLED",
+          message: `Order #${orderId.slice(-6).toUpperCase()} was cancelled by ${order.user?.name || 'customer'}.`,
+          orderId: orderId,
+        }
+      });
     });
+
+    // Notify admin via email outside transaction
+    await sendAdminOrderNotificationEmail(
+      orderId,
+      "ORDER_CANCELLED",
+      order.totalAmount,
+      order.user?.name || "Customer"
+    );
 
     revalidatePath("/profile/orders");
     revalidatePath(`/order-status/${orderId}`);
@@ -79,7 +97,8 @@ export async function requestReturn(orderId: string, reason: string): Promise<Or
     if (!userId) throw new Error("Unauthorized");
 
     const order = await prisma.order.findUnique({
-      where: { id: orderId, userId }
+      where: { id: orderId, userId },
+      include: { user: true }
     });
 
     if (!order) throw new Error("Order not found");
@@ -88,13 +107,23 @@ export async function requestReturn(orderId: string, reason: string): Promise<Or
       throw new Error("This order is not eligible for return.");
     }
 
-    await prisma.order.update({
-      where: { id: orderId },
-      data: {
-        orderStatus: "RETURN_REQUESTED",
-        returnRequestedAt: new Date(),
-        returnReason: reason,
-      }
+    await prisma.$transaction(async (tx) => {
+      await tx.order.update({
+        where: { id: orderId },
+        data: {
+          orderStatus: "RETURN_REQUESTED",
+          returnRequestedAt: new Date(),
+          returnReason: reason,
+        }
+      });
+
+      await tx.notification.create({
+        data: {
+          type: "RETURN_REQUESTED",
+          message: `Return requested for Order #${orderId.slice(-6).toUpperCase()} by ${order.user?.name || 'customer'}.`,
+          orderId: orderId,
+        }
+      });
     });
 
     revalidatePath("/profile/orders");
