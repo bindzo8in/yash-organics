@@ -1,6 +1,5 @@
 "use client";
 
-import React from 'react';
 import { Page, Text, View, Document, StyleSheet, Font, Image } from '@react-pdf/renderer';
 import { env } from "@/lib/env";
 
@@ -15,26 +14,38 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    alignItems: 'center',
     marginBottom: 30,
     borderBottom: '1 solid #000',
     paddingBottom: 10
   },
   headerLeft: {
+    width: '30%',
     flexDirection: 'column',
+    justifyContent: 'center',
+  },
+  headerCenter: {
+    width: '40%',
+    flexDirection: 'column',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   logo: {
     width: 120,
-    marginBottom: 8
+    height: 50,
+    objectFit: "contain",
   },
   headerRight: {
+    width: '30%',
     flexDirection: 'column',
-    alignItems: 'flex-end'
+    alignItems: 'flex-end',
+    justifyContent: 'center',
   },
   title: {
-    fontSize: 24,
+    fontSize: 18,
     fontWeight: 'bold',
-    marginBottom: 5,
-    textTransform: 'uppercase'
+    textTransform: 'uppercase',
+    textAlign: 'center',
   },
   subtitle: {
     fontSize: 10,
@@ -132,15 +143,21 @@ interface OrderPDFDocumentProps {
 
 export const OrderPDFDocument = ({ order }: OrderPDFDocumentProps) => {
   const subtotal = order.totalAmount - (order.deliveryCharge || 0);
+  const logoSrc =
+    typeof window !== "undefined"
+      ? `${window.location.origin}/logo/logo-rect.png`
+      : `${process.cwd()}/public/logo/logo-rect.png`;
 
   return (
     <Document>
       <Page size="A4" style={styles.page}>
-        
+
         {/* Header */}
         <View style={styles.header}>
           <View style={styles.headerLeft}>
-            <Image src="/logo/logo-rect.webp" style={styles.logo} />
+            <Image src={logoSrc} style={styles.logo} />
+          </View>
+          <View style={styles.headerCenter}>
             <Text style={styles.title}>Packing Slip</Text>
           </View>
           <View style={styles.headerRight}>
@@ -162,7 +179,7 @@ export const OrderPDFDocument = ({ order }: OrderPDFDocumentProps) => {
             <Text style={styles.text}>Phone: {order.address.phone}</Text>
             <Text style={styles.text}>Email: {order.address.email}</Text>
           </View>
-          
+
           <View style={styles.addressBox}>
             <Text style={styles.addressTitle}>Bill From</Text>
             <Text style={[styles.text, styles.bold]}>{env.NEXT_PUBLIC_SITE_NAME}</Text>
@@ -181,7 +198,7 @@ export const OrderPDFDocument = ({ order }: OrderPDFDocumentProps) => {
             <View style={styles.tableColPrice}><Text style={styles.tableCellHeader}>Unit Price</Text></View>
             <View style={styles.tableColTotal}><Text style={styles.tableCellHeader}>Total</Text></View>
           </View>
-          
+
           {order.orderItems.map((item: any) => (
             <View style={styles.tableRow} key={item.id}>
               <View style={styles.tableColItem}>
@@ -222,7 +239,7 @@ export const OrderPDFDocument = ({ order }: OrderPDFDocumentProps) => {
           <Text>Thank you for supporting organic farming!</Text>
           <Text>This is a computer-generated document and requires no signature.</Text>
         </View>
-        
+
       </Page>
     </Document>
   );
