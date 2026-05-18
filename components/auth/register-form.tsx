@@ -13,10 +13,12 @@ import { Input } from "@/components/ui/input";
 import { motion } from "motion/react";
 import { Loader2, CheckCircle2, ShieldCheck, ArrowRight, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
+import { PhoneInput } from "@/components/ui/phone-input";
 
 export function RegisterForm() {
   const initialState: AuthActionState = {};
   const [state, action, isPending] = useActionState(register, initialState);
+  const [phone, setPhone] = useState("");
   const [otp, setOtp] = useState("");
   const [isVerifying, startVerify] = useTransition();
   const [isResending, startResend] = useTransition();
@@ -180,11 +182,11 @@ export function RegisterForm() {
         <Field>
           <FieldLabel htmlFor="phone">Phone Number</FieldLabel>
           <FieldContent>
-            <Input
+            <PhoneInput
               id="phone"
               name="phone"
-              type="tel"
-              placeholder="+91 00000 00000"
+              value={phone}
+              onChange={setPhone}
               required
               autoComplete="tel"
               aria-invalid={!!state.errors?.phone}

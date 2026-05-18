@@ -7,6 +7,7 @@ import { Card } from "@/components/ui/card";
 import { getAddresses, createAddress, deleteAddress, updateAddress, AddressInput } from "@/lib/actions/address.actions";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { PhoneInput } from "@/components/ui/phone-input";
 
 interface AddressManagerProps {
   onSelect?: (addressId: string) => void;
@@ -19,6 +20,7 @@ export function AddressManager({ onSelect, onAddressesChange, selectedId, isSele
   const [addresses, setAddresses] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [isAdding, setIsAdding] = useState(false);
+  const [phone, setPhone] = useState("");
   const [editingAddress, setEditingAddress] = useState<any>(null);
 
   useEffect(() => {
@@ -84,6 +86,7 @@ export function AddressManager({ onSelect, onAddressesChange, selectedId, isSele
                 <button 
                   onClick={() => {
                     setEditingAddress(address);
+                    setPhone(address.phone || "");
                     setIsAdding(true);
                   }}
                   className="text-xs text-muted-foreground hover:text-primary flex items-center gap-1"
@@ -110,6 +113,7 @@ export function AddressManager({ onSelect, onAddressesChange, selectedId, isSele
         <button
           onClick={() => {
             setEditingAddress(null);
+            setPhone("");
             setIsAdding(true);
           }}
           className="flex flex-col items-center justify-center p-8 border-2 border-dashed border-foreground/10 rounded-lg hover:border-primary/40 hover:bg-primary/5 transition-all group"
@@ -184,7 +188,12 @@ export function AddressManager({ onSelect, onAddressesChange, selectedId, isSele
                  </div>
                  <div className="space-y-1">
                    <label className="text-[10px] uppercase tracking-widest font-bold text-muted-foreground">Phone</label>
-                   <input name="phone" defaultValue={editingAddress?.phone} required className="w-full p-3 border border-border bg-muted/20 text-sm focus:outline-none focus:border-primary transition-colors" />
+                   <PhoneInput 
+                     name="phone" 
+                     value={phone} 
+                     onChange={setPhone} 
+                     required 
+                   />
                  </div>
                </div>
                

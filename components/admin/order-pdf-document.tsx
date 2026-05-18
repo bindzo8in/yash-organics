@@ -1,7 +1,7 @@
 "use client";
 
 import React from 'react';
-import { Page, Text, View, Document, StyleSheet, Font } from '@react-pdf/renderer';
+import { Page, Text, View, Document, StyleSheet, Font, Image } from '@react-pdf/renderer';
 import { env } from "@/lib/env";
 
 // Create styles
@@ -21,6 +21,10 @@ const styles = StyleSheet.create({
   },
   headerLeft: {
     flexDirection: 'column',
+  },
+  logo: {
+    width: 120,
+    marginBottom: 8
   },
   headerRight: {
     flexDirection: 'column',
@@ -53,8 +57,8 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase'
   },
   text: {
-    marginBottom: 3,
-    lineHeight: 1.4
+    marginBottom: 1.5,
+    lineHeight: 1.15
   },
   bold: {
     fontWeight: 'bold'
@@ -136,8 +140,8 @@ export const OrderPDFDocument = ({ order }: OrderPDFDocumentProps) => {
         {/* Header */}
         <View style={styles.header}>
           <View style={styles.headerLeft}>
+            <Image src="/logo/logo-rect.webp" style={styles.logo} />
             <Text style={styles.title}>Packing Slip</Text>
-            <Text style={styles.subtitle}>YASH ORGANICS | Pure. Organic. Handcrafted.</Text>
           </View>
           <View style={styles.headerRight}>
             <Text style={styles.bold}>Order #{order.id.slice(-8).toUpperCase()}</Text>
