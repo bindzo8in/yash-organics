@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import crypto from "crypto";
 import prisma from "@/lib/prisma";
-import { sendOrderConfirmationEmail } from "@/lib/mail";
+import { sendOrderConfirmationEmail, sendAdminOrderNotificationEmail } from "@/lib/mail";
 
 export const dynamic = 'force-dynamic';
 
@@ -121,6 +121,23 @@ export async function POST(req: Request) {
             existingOrder.id,
             existingOrder.totalAmount
           );
+
+          // Send admin notification email
+          await sendAdminOrderNotificationEmail(
+            existingOrder.id,
+            "NEW_ORDER",
+            existingOrder.totalAmount,
+            existingOrder.user.name
+          );
+
+          // Create admin notification in database
+          await prisma.notification.create({
+            data: {
+              type: "NEW_ORDER",
+              message: `New order #${existingOrder.id.slice(-6).toUpperCase()} placed by ${existingOrder.user.name}`,
+              orderId: existingOrder.id,
+            }
+          });
         }
 
         break;
