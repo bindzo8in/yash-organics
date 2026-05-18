@@ -53,30 +53,26 @@ export function CTASection() {
             transition={{ delay: 0.2 }}
             className="text-lg md:text-xl text-white/70 max-w-2xl mx-auto font-medium leading-relaxed"
           >
-            Subscribe to our newsletter for exclusive organic wisdom, 
-            new product launches, and sustainable living tips.
+            Create an account for exclusive organic wisdom, 
+            new product launches, and seamless order tracking.
           </motion.p>
   
-          {/* Refined Subscription Form */}
+          {/* Registration Button */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: 0.4 }}
-            className="relative max-w-xl mx-auto pt-6"
+            className="relative max-w-xl mx-auto pt-6 flex flex-col items-center justify-center gap-4"
           >
-            <div className="flex flex-col sm:flex-row gap-4">
-              <input 
-                type="email" 
-                placeholder="Enter your email"
-                className="flex-1 bg-white/5 border border-white/10 rounded-full py-5 px-8 text-sm focus:ring-1 focus:ring-emerald-400 focus:border-emerald-400 outline-none backdrop-blur-md transition-all placeholder:text-white/30 hover:bg-white/10"
-              />
-              <button className="bg-white text-emerald-950 py-5 px-10 rounded-full font-bold uppercase tracking-widest text-[10px] hover:bg-emerald-50 hover:scale-105 active:scale-95 transition-all shadow-xl whitespace-nowrap">
-                Join Now
-              </button>
-            </div>
-            <p className="mt-4 text-[10px] text-white/40 uppercase tracking-widest font-bold">
-              No Spam. Just Pure Nature.
+            <Link 
+              href="/register"
+              className="bg-white text-emerald-950 py-5 px-12 rounded-full font-bold uppercase tracking-widest text-xs hover:bg-emerald-50 hover:scale-105 active:scale-95 transition-all shadow-xl whitespace-nowrap"
+            >
+              Register Now
+            </Link>
+            <p className="mt-2 text-[10px] text-white/40 uppercase tracking-widest font-bold">
+              Join Our Community. Pure Nature Awaits.
             </p>
           </motion.div>
   

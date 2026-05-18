@@ -15,6 +15,7 @@ import { Loader2, ShieldCheck, Truck, CreditCard, ChevronRight } from "lucide-re
 import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { env } from "@/lib/env";
+import { useSession } from "next-auth/react";
 
 declare global {
   interface Window {
@@ -25,6 +26,7 @@ declare global {
 export default function CheckoutPage() {
   const router = useRouter();
   const { items, totalPrice, clearCart } = useCart();
+  const { data: session, status } = useSession();
   const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null);
   const [addresses, setAddresses] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
@@ -175,10 +177,16 @@ export default function CheckoutPage() {
   };
 
   useEffect(() => {
-    if (isMounted && items.length === 0 && !isSuccess) {
+    if (isMounted && status === "unauthenticated") {
+      router.push("/login?callbackUrl=/checkout");
+    }
+  }, [isMounted, status, router]);
+
+  useEffect(() => {
+    if (isMounted && items.length === 0 && !isSuccess && status === "authenticated") {
       router.push("/cart");
     }
-  }, [isMounted, items.length, router, isSuccess]);
+  }, [isMounted, items.length, router, isSuccess, status]);
 
   if (!isMounted) return null;
   if (items.length === 0) return null;

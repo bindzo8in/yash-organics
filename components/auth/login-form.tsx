@@ -13,8 +13,11 @@ import { Input } from "@/components/ui/input";
 import { motion } from "motion/react";
 import { Loader2, ShieldCheck, ArrowRight, RefreshCw, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
+import { useSearchParams } from "next/navigation";
 
 export function LoginForm() {
+  const searchParams = useSearchParams();
+  const callbackUrl = searchParams.get("callbackUrl") || "/";
   const initialState: AuthActionState = {};
   const [state, action, isPending] = useActionState(login, initialState);
   const [otp, setOtp] = useState("");
@@ -148,6 +151,7 @@ export function LoginForm() {
       </div>
 
       <form action={action} className="space-y-6">
+        <input type="hidden" name="callbackUrl" value={callbackUrl} />
         <Field>
           <FieldLabel htmlFor="email">Email Address</FieldLabel>
           <FieldContent>

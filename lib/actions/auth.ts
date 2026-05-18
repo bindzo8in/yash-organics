@@ -186,6 +186,7 @@ export async function resendOtp(email: string): Promise<AuthActionState> {
 export async function login(prevState: any, formData: FormData): Promise<AuthActionState> {
   const email = formData.get("email") as string;
   const password = formData.get("password") as string;
+  const callbackUrl = (formData.get("callbackUrl") as string) || "/";
 
   if (!email || !password) {
     return { message: "Please enter both email and password." };
@@ -195,7 +196,7 @@ export async function login(prevState: any, formData: FormData): Promise<AuthAct
     await signIn("credentials", {
       email,
       password,
-      redirectTo: "/",
+      redirectTo: callbackUrl,
     });
     return { success: true };
   } catch (error) {

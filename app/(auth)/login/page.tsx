@@ -1,4 +1,5 @@
 import { LoginForm } from "@/components/auth/login-form";
+import { Suspense } from "react";
 
 export const metadata = {
   title: "Login | Yash Organics",
@@ -6,5 +7,9 @@ export const metadata = {
 };
 
 export default function LoginPage() {
-  return <LoginForm />;
+  return (
+    <Suspense fallback={<div className="w-full max-w-md p-8 text-center">Loading...</div>}>
+      <LoginForm />
+    </Suspense>
+  );
 }
