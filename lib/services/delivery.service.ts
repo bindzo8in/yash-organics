@@ -1,14 +1,3 @@
-/**
- * Logic for delivery availability and charges.
- * In a real app, this would call a logistics API like Delhivery or Shiprocket.
- */
-
-// Sample list of available pincodes (Serviceable Areas)
-const SERVICEABLE_PINCODES = [
-  "400001", "400002", "110001", "110002", "560001", "560002",
-  "600001", "600002", "700001", "700002", "500001", "500002"
-];
-
 export interface DeliveryEstimate {
   isAvailable: boolean;
   deliveryCharge: number;
@@ -16,59 +5,40 @@ export interface DeliveryEstimate {
   message?: string;
 }
 
-export async function checkDeliveryAvailability(pincode: string, orderTotal: number): Promise<DeliveryEstimate> {
-  // Basic validation
-  if (!pincode || pincode.length !== 6) {
-    return { isAvailable: false, deliveryCharge: 0, estimatedDays: 0, message: "Invalid pincode" };
+export function checkDeliveryAvailability(pincode: string, orderTotal: number): DeliveryEstimate {
+  // 1. Basic validation: strictly 6 digits
+  if (!pincode || !/^\d{6}$/.test(pincode)) {
+    return { isAvailable: false, deliveryCharge: 0, estimatedDays: 0, message: "Invalid pincode format." };
   }
 
-  try {
-    const response = await fetch(`https://api.postalpincode.in/pincode/${pincode}`);
-    const data = await response.json();
+  // 2. Local Validation based on official PIN structure
+  // Tamil Nadu pincodes start with 60 through 66, but exclude 605 (Puducherry)
+  const prefix2 = parseInt(pincode.substring(0, 2), 10);
+  const prefix3 = pincode.substring(0, 3);
+  
+  const isTamilNadu = (prefix2 >= 60 && prefix2 <= 66) && (prefix3 !== "605");
 
-    if (!data || data[0].Status !== "Success") {
-      return { 
-        isAvailable: false, 
-        deliveryCharge: 0, 
-        estimatedDays: 0, 
-        message: "Pincode not found. Please check and try again." 
-      };
-    }
-
-    const postOffices = data[0].PostOffice;
-    const isTamilNadu = postOffices.some((po: any) => po.State === "Tamil Nadu");
-
-    if (!isTamilNadu) {
-      return { 
-        isAvailable: false, 
-        deliveryCharge: 0, 
-        estimatedDays: 0, 
-        message: "Currently, we only deliver within Tamil Nadu." 
-      };
-    }
-
-    // Delivery Charge Logic:
-    // - Free delivery above ₹999
-    // - Standard ₹50 below ₹999
-    const deliveryCharge = orderTotal >= 999 ? 0 : 50;
-    const estimatedDays = 3; // Standard 3 days for TN
-
-    return {
-      isAvailable: true,
-      deliveryCharge,
-      estimatedDays,
-      message: deliveryCharge === 0 
-        ? "Yay! You've got Free Delivery." 
-        : `Standard delivery charge of ₹${deliveryCharge} applies.`
-    };
-  } catch (error) {
-    console.error("Delivery API error:", error);
-    // Fallback to safe state
+  if (!isTamilNadu) {
     return { 
       isAvailable: false, 
       deliveryCharge: 0, 
       estimatedDays: 0, 
-      message: "Unable to verify delivery availability. Please try again later." 
+      message: "Currently, we only deliver within Tamil Nadu." 
     };
   }
+
+  // 3. Delivery Charge Logic
+  // - Free delivery above ₹999
+  // - Standard ₹50 below ₹999
+  const deliveryCharge = orderTotal >= 999 ? 0 : 50;
+  const estimatedDays = 3; // Standard 3 days for TN
+
+  return {
+    isAvailable: true,
+    deliveryCharge,
+    estimatedDays,
+    message: deliveryCharge === 0 
+      ? "Yay! You've got Free Delivery." 
+      : `Standard delivery charge of ₹${deliveryCharge} applies.`
+  };
 }
