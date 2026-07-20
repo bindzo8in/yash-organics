@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { motion } from "motion/react";
-import { Heart, ShoppingCart } from "lucide-react";
+import { Heart, ShoppingCart, Zap } from "lucide-react";
 
 import { Product } from "@/lib/types/product";
 import { PriceDisplay } from "@/components/shared/price-display";
@@ -12,9 +12,10 @@ import { RatingStars } from "@/components/shared/rating-stars";
 interface ProductCardProps {
   product: Product;
   onQuickAdd: (product: Product) => void;
+  onBuyNow?: (product: Product) => void;
 }
 
-export function ProductCard({ product, onQuickAdd }: ProductCardProps) {
+export function ProductCard({ product, onQuickAdd, onBuyNow }: ProductCardProps) {
   const isOutOfStock = product.stock <= 0;
 
   const hasDiscount =
@@ -34,6 +35,19 @@ export function ProductCard({ product, onQuickAdd }: ProductCardProps) {
     if (isOutOfStock) return;
 
     onQuickAdd(product);
+  };
+
+  const handleBuyNow = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (isOutOfStock) return;
+
+    if (onBuyNow) {
+      onBuyNow(product);
+    } else {
+      onQuickAdd(product);
+    }
   };
 
   return (
@@ -119,32 +133,42 @@ export function ProductCard({ product, onQuickAdd }: ProductCardProps) {
           </p>
         )}
 
-        <div className="mt-auto flex items-end justify-between gap-3 pt-4">
+        <div className="mt-auto flex items-end justify-between gap-2 pt-4">
           <div className="min-w-0">
             <PriceDisplay
               price={product.sellingPrice}
               compareAtPrice={product.mrp}
-              className="text-lg font-bold text-emerald-900 sm:text-xl"
+              className="text-base font-bold text-emerald-900 sm:text-lg"
             />
 
             {!isOutOfStock && product.stock <= 5 && (
-              <p className="mt-1 text-xs font-medium text-orange-600">
+              <p className="mt-0.5 text-[11px] font-medium text-orange-600">
                 Only {product.stock} left
               </p>
             )}
           </div>
 
-          <button
-            type="button"
-            onClick={handleAddToCart}
-            disabled={isOutOfStock}
-            className="inline-flex h-10 shrink-0 items-center justify-center gap-2 rounded-full bg-emerald-700 px-4 text-sm font-semibold text-white transition hover:bg-emerald-800 active:scale-95 disabled:cursor-not-allowed disabled:bg-zinc-300 disabled:text-zinc-500"
-          >
-            <ShoppingCart className="size-4" />
-            <span className="hidden sm:inline">
-              {isOutOfStock ? "Sold" : "Add"}
-            </span>
-          </button>
+          <div className="flex items-center gap-1.5 shrink-0">
+            <button
+              type="button"
+              onClick={handleBuyNow}
+              disabled={isOutOfStock}
+              className="inline-flex h-9 shrink-0 items-center justify-center gap-1 rounded-full bg-emerald-800 px-3 text-xs font-semibold text-white shadow-sm transition hover:bg-emerald-900 active:scale-95 disabled:cursor-not-allowed disabled:bg-zinc-300 disabled:text-zinc-500"
+            >
+              <Zap className="size-3.5 fill-amber-300 text-amber-300" />
+              <span>Buy Now</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={handleAddToCart}
+              disabled={isOutOfStock}
+              aria-label="Add to cart"
+              className="inline-flex size-9 shrink-0 items-center justify-center rounded-full border border-emerald-700/30 bg-emerald-50 text-emerald-700 transition hover:bg-emerald-700 hover:text-white active:scale-95 disabled:cursor-not-allowed disabled:bg-zinc-100 disabled:text-zinc-400"
+            >
+              <ShoppingCart className="size-4" />
+            </button>
+          </div>
         </div>
       </div>
     </motion.article>

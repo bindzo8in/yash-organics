@@ -1,19 +1,22 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ShoppingBag, Minus, Plus, Check } from "lucide-react";
+import { ShoppingBag, Minus, Plus, Check, Zap } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { useCart } from "@/hooks/use-cart";
+import { QuickAddModal } from "@/components/sections/product-listing/quick-add-modal";
 
 interface ProductInfoProps {
   product: any;
 }
 
 export function ProductInfo({ product }: ProductInfoProps) {
+  const router = useRouter();
   const cart = useCart();
   const variants = product.variants || [];
   const [selectedVariant, setSelectedVariant] = useState(
@@ -22,6 +25,7 @@ export function ProductInfo({ product }: ProductInfoProps) {
   const [quantity, setQuantity] = useState(1);
   const [isAdding, setIsAdding] = useState(false);
   const [openSection, setOpenSection] = useState<string | null>("benefits");
+  const [isBuyNowModalOpen, setIsBuyNowModalOpen] = useState(false);
   
   const currentPrice = selectedVariant?.sellingPrice || 0;
   const currentMRP = selectedVariant?.mrp;
@@ -65,11 +69,15 @@ export function ProductInfo({ product }: ProductInfoProps) {
       icon: <Check className="h-4 w-4 text-emerald-600" />,
       action: {
         label: "View Cart",
-        onClick: () => window.location.href = "/cart",
+        onClick: () => router.push("/cart"),
       },
     });
     
     setIsAdding(false);
+  };
+
+  const handleOpenBuyNowModal = () => {
+    setIsBuyNowModalOpen(true);
   };
 
   const sections = [
@@ -78,14 +86,37 @@ export function ProductInfo({ product }: ProductInfoProps) {
     { id: "usage", title: "How to Use", content: product.usage },
   ].filter(s => s.content);
 
+  const primaryImage = product.productImages?.find((img: any) => img.isPrimary)?.url || product.productImages?.[0]?.url;
+  const normalizedProductForModal = {
+    id: product.id,
+    name: product.name,
+    slug: product.slug,
+    description: product.description,
+    sellingPrice: currentPrice,
+    mrp: currentMRP,
+    image: primaryImage || "/placeholder-product.png",
+    category: product.category,
+    rating: 4.5,
+    reviewCount: 12,
+    stock: currentStock,
+    variants: product.variants || [],
+  };
+
   return (
     <div className="flex flex-col h-full">
+      <QuickAddModal 
+        product={normalizedProductForModal as any}
+        isOpen={isBuyNowModalOpen}
+        onClose={() => setIsBuyNowModalOpen(false)}
+        initialMode="buy_now"
+      />
+
       <div className="flex-1 space-y-10">
         {/* Header & Badges */}
         <div className="space-y-6">
           <div className="flex flex-wrap gap-2">
             <Badge variant="secondary" className="bg-secondary/50 text-secondary-foreground text-[10px] uppercase tracking-widest px-3 py-1 rounded-sm border-none font-bold">
-              {product.category.name}
+              {product.category?.name || "Organic"}
             </Badge>
             {product.isNew && (
               <Badge className="bg-accent/10 text-accent text-[10px] uppercase tracking-widest px-3 py-1 rounded-sm border-none font-bold">
@@ -119,7 +150,7 @@ export function ProductInfo({ product }: ProductInfoProps) {
           </p>
         </div>
 
-        {/* Quick Features / Key Ingredients (from image) */}
+        {/* Quick Features / Key Ingredients */}
         {product.ingredients && (
           <div className="space-y-4 pt-2">
             <span className="text-[10px] uppercase tracking-[0.2em] font-bold text-muted-foreground/80">Key Ingredients</span>
@@ -159,11 +190,11 @@ export function ProductInfo({ product }: ProductInfoProps) {
           </div>
         )}
 
-        {/* Actions Row (Quantity + Add to Bag matching image) */}
-        <div className="pt-4 space-y-6">
-          <div className="flex flex-col sm:flex-row gap-4">
+        {/* Actions Row (Quantity + Buy Now + Add to Bag) */}
+        <div className="pt-4 space-y-4">
+          <div className="flex flex-col sm:flex-row gap-3">
             {/* Quantity Selector */}
-            <div className="flex items-center border border-border h-14 bg-secondary/10 px-2">
+            <div className="flex items-center border border-border h-14 bg-secondary/10 px-2 shrink-0">
               <button 
                 onClick={() => setQuantity(Math.max(1, quantity - 1))}
                 className="w-10 h-full flex items-center justify-center hover:text-primary transition-colors disabled:opacity-30"
@@ -173,19 +204,30 @@ export function ProductInfo({ product }: ProductInfoProps) {
               </button>
               <span className="w-10 text-center font-serif text-lg">{quantity}</span>
               <button 
-                onClick={() => setQuantity(Math.min(maxAllowed, quantity + 1))}
+                onClick={() => setQuantity(Math.min(maxAllowed > 0 ? maxAllowed : currentStock, quantity + 1))}
                 className="w-10 h-full flex items-center justify-center hover:text-primary transition-colors disabled:opacity-30"
-                disabled={currentStock === 0 || quantity >= maxAllowed}
+                disabled={currentStock === 0 || quantity >= currentStock}
               >
                 <Plus className="h-3.5 w-3.5" />
               </button>
             </div>
 
+            {/* Buy Now Button (Direct Checkout Modal) */}
+            <Button 
+              onClick={handleOpenBuyNowModal}
+              disabled={currentStock === 0}
+              className="flex-1 h-14 text-sm font-bold bg-emerald-800 hover:bg-emerald-900 text-white rounded-none shadow-lg transition-all active:scale-[0.98] flex items-center justify-center gap-2"
+            >
+              <Zap className="h-4 w-4 text-amber-300 fill-amber-300" />
+              {currentStock === 0 ? "OUT OF STOCK" : "BUY NOW"}
+            </Button>
+
             {/* Add to Bag Button */}
             <Button 
               onClick={handleAddToCart}
               disabled={isAdding || currentStock === 0 || maxAllowed === 0}
-              className="flex-1 h-14 text-sm font-bold bg-primary hover:bg-primary/90 rounded-none shadow-lg transition-all active:scale-[0.98] flex items-center justify-center gap-3"
+              variant="outline"
+              className="flex-1 h-14 text-sm font-bold border-primary text-primary hover:bg-primary/5 rounded-none shadow-sm transition-all active:scale-[0.98] flex items-center justify-center gap-2"
             >
               {isAdding ? (
                 <motion.div 
@@ -197,20 +239,20 @@ export function ProductInfo({ product }: ProductInfoProps) {
               ) : (
                 <>
                   <ShoppingBag className="h-4 w-4" />
-                  {currentStock === 0 ? "OUT OF STOCK" : "ADD TO SHOPPING BAG"}
+                  {currentStock === 0 ? "OUT OF STOCK" : maxAllowed === 0 ? "LIMIT REACHED" : "ADD TO BAG"}
                 </>
               )}
             </Button>
           </div>
 
-          <div className="flex items-center gap-4 text-[10px] text-muted-foreground uppercase tracking-[0.2em] font-medium">
+          <div className="flex items-center gap-4 text-[10px] text-muted-foreground uppercase tracking-[0.2em] font-medium pt-2">
             <div className="flex items-center gap-2">
               <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
               Free shipping over ₹999
             </div>
             <div className="w-1 h-1 rounded-full bg-border" />
             <div className="flex items-center gap-2">
-              Secure Payments
+              Secure Direct Checkout
             </div>
           </div>
         </div>

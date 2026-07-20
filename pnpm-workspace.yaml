@@ -1,8 +1,21 @@
-ignoredBuiltDependencies:
-  - sharp
-  - unrs-resolver
+overrides:
+  zod: ^3.25.76
+
 onlyBuiltDependencies:
   - prisma
   - "@prisma/client"
   - "@prisma/engines"
   - esbuild
+  - msw
+
+allowBuilds:
+  "@prisma/engines": true
+  esbuild: true
+  msw: true
+  prisma: true
+  sharp: true
+  unrs-resolver: true
+
+ignoredBuiltDependencies:
+  - sharp
+  - unrs-resolver

@@ -16,9 +16,16 @@ interface NewLaunchProps {
 export function NewLaunch({ products }: NewLaunchProps) {
   const { addItem } = useCart();
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [modalMode, setModalMode] = useState<'add' | 'buy_now'>('add');
 
   const handleQuickAdd = (product: Product) => {
     setSelectedProduct(product);
+    setModalMode('add');
+  };
+
+  const handleBuyNow = (product: Product) => {
+    setSelectedProduct(product);
+    setModalMode('buy_now');
   };
 
   return (
@@ -27,6 +34,7 @@ export function NewLaunch({ products }: NewLaunchProps) {
         product={selectedProduct}
         isOpen={!!selectedProduct}
         onClose={() => setSelectedProduct(null)}
+        initialMode={modalMode}
       />
       {/* Background Decor */}
       <LeafVector 
@@ -75,6 +83,7 @@ export function NewLaunch({ products }: NewLaunchProps) {
           <ProductCard
             product={product}
             onQuickAdd={handleQuickAdd}
+            onBuyNow={handleBuyNow}
           />
         </div>
       </motion.div>

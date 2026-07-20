@@ -6,7 +6,8 @@ import { ProductVariant } from "@/app/generated/prisma/client";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { PriceDisplay } from "@/components/shared/price-display";
-import { Minus, Plus, ShoppingCart, X } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Zap, Minus, Plus, ShoppingCart, X } from "lucide-react";
 import { useCart } from "@/hooks/use-cart";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -17,9 +18,11 @@ interface QuickAddModalProps {
   product: Product | null;
   isOpen: boolean;
   onClose: () => void;
+  initialMode?: 'add' | 'buy_now';
 }
 
-export function QuickAddModal({ product, isOpen, onClose }: QuickAddModalProps) {
+export function QuickAddModal({ product, isOpen, onClose, initialMode = 'add' }: QuickAddModalProps) {
+  const router = useRouter();
   const [selectedVariant, setSelectedVariant] = useState<ProductVariant | null>(null);
   const [quantity, setQuantity] = useState(1);
   const cart = useCart();
@@ -62,11 +65,34 @@ export function QuickAddModal({ product, isOpen, onClose }: QuickAddModalProps) 
       description: `Variant: ${currentVariant.name}, Quantity: ${quantity}`,
       action: {
         label: "View Cart",
-        onClick: () => window.location.href = "/cart",
+        onClick: () => router.push("/cart"),
       },
     });
     
     onClose();
+  };
+
+  const handleBuyNow = () => {
+    if (!currentVariant || currentStock <= 0) return;
+
+    const cartProduct = {
+      ...product,
+      sellingPrice: currentVariant.sellingPrice,
+      variantId: currentVariant.id,
+      variantName: currentVariant.name,
+      stock: currentStock,
+    };
+
+    // Add item to cart
+    cart.addItem(cartProduct as any, quantity);
+
+    toast.success("Proceeding to checkout...", {
+      description: `${quantity} x ${product.name} (${currentVariant.name})`,
+    });
+
+    onClose();
+    // Direct checkout
+    router.push("/checkout");
   };
 
   return (
@@ -96,7 +122,7 @@ export function QuickAddModal({ product, isOpen, onClose }: QuickAddModalProps) 
             <div className="p-8 -mt-12 relative z-10">
               <DialogHeader className="mb-8">
                 <span className="text-[10px] uppercase tracking-[0.2em] text-primary/60 font-medium mb-2 block text-center">
-                  Quick Add
+                  {initialMode === 'buy_now' ? "Direct Checkout" : "Quick Add"}
                 </span>
                 <DialogTitle className="font-serif text-3xl text-primary text-center leading-tight">
                   {product.name}
@@ -126,7 +152,7 @@ export function QuickAddModal({ product, isOpen, onClose }: QuickAddModalProps) 
                           className={cn(
                             "px-5 py-2.5 text-xs transition-all duration-500 border relative overflow-hidden group",
                             selectedVariant?.id === v.id 
-                              ? "border-primary text-primary bg-primary/5"
+                              ? "border-primary text-primary bg-primary/5 font-semibold"
                               : "border-foreground/5 text-muted-foreground hover:border-primary/30"
                           )}
                         >
@@ -172,9 +198,9 @@ export function QuickAddModal({ product, isOpen, onClose }: QuickAddModalProps) 
                       </button>
                       <span className="flex-1 text-center text-sm font-medium tabular-nums">{quantity}</span>
                       <button 
-                        onClick={() => setQuantity(q => Math.min(maxAllowed, q + 1))}
+                        onClick={() => setQuantity(q => Math.min(maxAllowed > 0 ? maxAllowed : currentStock, q + 1))}
                         className="w-10 h-full flex items-center justify-center hover:bg-[#F6F1EB] transition-colors disabled:opacity-20"
-                        disabled={quantity >= maxAllowed || currentStock === 0}
+                        disabled={quantity >= currentStock || currentStock === 0}
                       >
                         <Plus className="w-3.5 h-3.5" />
                       </button>
@@ -182,13 +208,28 @@ export function QuickAddModal({ product, isOpen, onClose }: QuickAddModalProps) 
                   </div>
                 </div>
 
-                <div className="pt-4">
+                <div className="pt-4 space-y-3">
                   <Button 
-                    className="w-full rounded-none h-14 uppercase tracking-[0.25em] text-[10px] font-bold shadow-lg shadow-primary/10 hover:shadow-primary/20 transition-all duration-500"
+                    className={cn(
+                      "w-full rounded-none h-14 uppercase tracking-[0.25em] text-[10px] font-bold shadow-lg transition-all duration-500",
+                      initialMode === 'buy_now'
+                        ? "bg-emerald-800 text-white hover:bg-emerald-900 shadow-emerald-800/20"
+                        : "bg-primary text-white hover:bg-primary/90 shadow-primary/10"
+                    )}
+                    onClick={handleBuyNow}
+                    disabled={currentStock === 0}
+                  >
+                    <Zap className="w-4 h-4 mr-2 text-amber-300 fill-amber-300" />
+                    {currentStock === 0 ? "Out of Stock" : "Buy Now"}
+                  </Button>
+
+                  <Button 
+                    variant="outline"
+                    className="w-full rounded-none h-12 uppercase tracking-[0.2em] text-[10px] font-bold border-foreground/10 text-foreground/80 hover:bg-foreground/5 transition-all duration-300"
                     onClick={handleAddToCart}
                     disabled={currentStock === 0 || maxAllowed === 0}
                   >
-                    <ShoppingCart className="w-4 h-4 mr-3" />
+                    <ShoppingCart className="w-4 h-4 mr-2" />
                     {currentStock === 0 ? "Out of Stock" : maxAllowed === 0 ? "Limit Reached" : "Add to Cart"}
                   </Button>
                 </div>

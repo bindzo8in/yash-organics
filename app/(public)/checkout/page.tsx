@@ -57,7 +57,7 @@ export default function CheckoutPage() {
       
       setIsCheckingDelivery(true);
       try {
-        const estimate = await checkDeliveryAvailability(selectedAddress.postalCode, currentTotal);
+        const estimate = checkDeliveryAvailability(selectedAddress.postalCode, currentTotal);
         if (!isCancelled) {
           setDeliveryEstimate(estimate);
         }

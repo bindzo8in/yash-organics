@@ -32,6 +32,17 @@ export function ProductListingPage({
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const [quickAddProduct, setQuickAddProduct] = useState<Product | null>(null);
+  const [modalMode, setModalMode] = useState<'add' | 'buy_now'>('add');
+
+  const handleQuickAdd = (product: Product) => {
+    setQuickAddProduct(product);
+    setModalMode('add');
+  };
+
+  const handleBuyNow = (product: Product) => {
+    setQuickAddProduct(product);
+    setModalMode('buy_now');
+  };
 
   // Extract page from URL for pagination component
   const page = Number(searchParams.get("page")) || 1;
@@ -46,6 +57,7 @@ export function ProductListingPage({
         product={quickAddProduct}
         isOpen={!!quickAddProduct}
         onClose={() => setQuickAddProduct(null)}
+        initialMode={modalMode}
       />
       {/* Sidebar Filters (Desktop) */}
       <aside className="hidden lg:block w-64 flex-shrink-0 sticky top-24 h-fit">
@@ -81,7 +93,8 @@ export function ProductListingPage({
             >
               <ProductGrid 
                 products={initialProducts} 
-                onQuickAdd={(product) => setQuickAddProduct(product)}
+                onQuickAdd={handleQuickAdd}
+                onBuyNow={handleBuyNow}
               />
               <Pagination totalPages={initialTotalPages} currentPage={page} />
             </motion.div>
