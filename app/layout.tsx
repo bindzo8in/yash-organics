@@ -24,6 +24,7 @@ export const metadata: Metadata = {
 import AuthProvider from "@/components/providers/auth-provider";
 import { CartSync } from "@/components/shared/cart-sync";
 import { FloatingBackground } from "@/components/shared/floating-background";
+import MetaPixel from "@/components/MetaPixel";
 
 export default function RootLayout({
   children,
@@ -43,6 +44,7 @@ export default function RootLayout({
               <FloatingBackground />
               {children}
               <SonnerToaster position="top-center" richColors />
+              <MetaPixel />
             </TooltipProvider>
           </QueryProvider>
         </AuthProvider>
