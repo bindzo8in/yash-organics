@@ -1,9 +1,9 @@
 "use server"; // Note: This will be a mix of server actions and client logic in practice, but I'll define actions here.
 
 import prisma from "@/lib/prisma";
-import { auth } from "@/auth";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
+import { getOrCreateCustomerUser } from "./guest-user";
 
 const addressSchema = z.object({
   fullName: z.string().min(2, "Full name is required"),
@@ -21,28 +21,30 @@ const addressSchema = z.object({
 export type AddressInput = z.infer<typeof addressSchema>;
 
 export async function getAddresses() {
-  const session = await auth();
-  if (!session?.user?.id) return [];
+  const currentUser = await getOrCreateCustomerUser();
+  if (!currentUser?.userId) return [];
 
   return await prisma.address.findMany({
-    where: { userId: session.user.id },
+    where: { userId: currentUser.userId },
     orderBy: { isDefault: "desc" },
   });
 }
 
 export async function createAddress(data: AddressInput) {
   try {
-    const session = await auth();
-    if (!session?.user?.id) throw new Error("Unauthorized");
-    
-    console.log("DEBUG: Creating address for userId:", session.user.id);
-    console.log("DEBUG: Session user:", session.user);
+    const currentUser = await getOrCreateCustomerUser({
+      name: data.fullName,
+      email: data.email,
+      phone: data.phone,
+    });
+
+    if (!currentUser?.userId) throw new Error("Unable to create address for this checkout session");
   
     const validated = addressSchema.parse(data);
     
     // Verify user exists in DB to prevent foreign key violations from stale sessions
     const user = await prisma.user.findUnique({
-      where: { id: session.user.id }
+      where: { id: currentUser.userId }
     });
 
     if (!user) {
@@ -52,7 +54,7 @@ export async function createAddress(data: AddressInput) {
     // If this is the first address, or isDefault is true, unset other defaults
     if (validated.isDefault) {
       await prisma.address.updateMany({
-        where: { userId: session.user.id },
+        where: { userId: currentUser.userId },
         data: { isDefault: false },
       });
     }
@@ -60,7 +62,7 @@ export async function createAddress(data: AddressInput) {
     const address = await prisma.address.create({
       data: {
         ...validated,
-        userId: session.user.id,
+        userId: currentUser.userId,
         addressLine2: validated.addressLine2 || "",
       },
     });
@@ -77,18 +79,18 @@ export async function createAddress(data: AddressInput) {
 }
 
 export async function updateAddress(id: string, data: Partial<AddressInput>) {
-  const session = await auth();
-  if (!session?.user?.id) throw new Error("Unauthorized");
+  const currentUser = await getOrCreateCustomerUser();
+  if (!currentUser?.userId) throw new Error("Unauthorized");
 
   if (data.isDefault) {
     await prisma.address.updateMany({
-      where: { userId: session.user.id },
+      where: { userId: currentUser.userId },
       data: { isDefault: false },
     });
   }
 
   await prisma.address.update({
-    where: { id, userId: session.user.id },
+    where: { id, userId: currentUser.userId },
     data: {
         ...data,
         addressLine2: data.addressLine2 ?? ""
@@ -100,11 +102,11 @@ export async function updateAddress(id: string, data: Partial<AddressInput>) {
 }
 
 export async function deleteAddress(id: string) {
-  const session = await auth();
-  if (!session?.user?.id) throw new Error("Unauthorized");
+  const currentUser = await getOrCreateCustomerUser();
+  if (!currentUser?.userId) throw new Error("Unauthorized");
 
   await prisma.address.delete({
-    where: { id, userId: session.user.id },
+    where: { id, userId: currentUser.userId },
   });
 
   revalidatePath("/profile/addresses");

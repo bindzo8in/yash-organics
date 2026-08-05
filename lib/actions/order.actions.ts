@@ -1,8 +1,8 @@
 "use server";
 
 import prisma from "@/lib/prisma";
-import { auth } from "@/auth";
 import { razorpay } from "@/lib/razorpay";
+import { getOrCreateCustomerUser, setGuestCookie } from "./guest-user";
 import { revalidatePath } from "next/cache";
 import crypto from "crypto";
 import { checkDeliveryAvailability } from "@/lib/services/delivery.service";
@@ -15,16 +15,29 @@ export async function createOrder(data: {
   totalAmount: number;
 }) {
  try {
-    const session = await auth();
-    const userId = session?.user?.id;
-    if (!userId) throw new Error("Unauthorized");
- 
    const { addressId, cartItems, totalAmount } = data;
  
    // 1. Validate Address
    const address = await prisma.address.findUnique({
-     where: { id: addressId, userId: userId },
+     where: { id: addressId },
+     include: { user: true },
    });
+   if (!address) throw new Error("Invalid address");
+
+   const currentUser = await getOrCreateCustomerUser({
+     name: address.fullName,
+     email: address.email,
+     phone: address.phone,
+   });
+   const userId = currentUser?.userId;
+   if (!userId) throw new Error("Unauthorized");
+
+   if (address.userId !== userId) {
+     const existingAddress = await prisma.address.findFirst({
+       where: { id: addressId, userId },
+     });
+     if (!existingAddress) throw new Error("Invalid address");
+   }
    if (!address) throw new Error("Invalid address");
  
    // 2. Validate Inventory & Price (Edge Case: Price changed or out of stock)
@@ -176,15 +189,28 @@ export async function verifyPayment(data: {
   orderId: string;
 }) {
   try {
-    const session = await auth();
-    const userId = session?.user?.id;
-    if (!userId) throw new Error("Unauthorized");
-
     const { razorpayOrderId, razorpayPaymentId, razorpaySignature, orderId } = data;
     
     if (!process.env.RAZORPAY_KEY_SECRET) {
       throw new Error("Razorpay key secret is missing");
     }
+
+    const currentUser = await getOrCreateCustomerUser();
+    let userId = currentUser?.userId;
+
+    // Fallback for guest users if cookie was lost/missing in request header
+    if (!userId && orderId) {
+      const orderForAuth = await prisma.order.findUnique({
+        where: { id: orderId },
+        select: { userId: true },
+      });
+      if (orderForAuth?.userId) {
+        userId = orderForAuth.userId;
+        await setGuestCookie(userId);
+      }
+    }
+
+    if (!userId) throw new Error("Unauthorized");
 
     // 1. Verify Razorpay Signature
     const body = `${razorpayOrderId}|${razorpayPaymentId}`;

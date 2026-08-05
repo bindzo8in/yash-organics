@@ -1,6 +1,6 @@
 import prisma from "@/lib/prisma";
-import { auth } from "@/auth";
 import { notFound, redirect } from "next/navigation";
+import { getOrCreateCustomerUser } from "@/lib/actions/guest-user";
 import { CheckCircle2, Package, Truck, Calendar, MapPin, Phone, Mail, AlertCircle, RotateCcw } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
@@ -17,11 +17,10 @@ interface PageProps {
 
 export default async function OrderStatusPage({ params }: PageProps) {
   const { id } = await params;
-  const session = await auth();
-  if (!session?.user?.id) redirect("/login");
+  const currentUser = await getOrCreateCustomerUser();
 
   const order = await prisma.order.findUnique({
-    where: { id, userId: session.user.id },
+    where: currentUser?.userId ? { id, userId: currentUser.userId } : { id },
     include: {
       orderItems: {
         include: {
@@ -41,6 +40,8 @@ export default async function OrderStatusPage({ params }: PageProps) {
   });
 
   if (!order) notFound();
+
+  const isGuest = currentUser ? currentUser.isGuest : true;
 
   const isPaid = order.paymentStatus === "PAID";
   const isPending = order.paymentStatus === "PENDING";
@@ -206,11 +207,20 @@ export default async function OrderStatusPage({ params }: PageProps) {
               </Button>
             </Link>
             
-            <Link href="/profile/orders" className="block">
-              <Button className="w-full rounded-none py-6 bg-primary hover:bg-primary/90 text-primary-foreground">
-                View My Orders
-              </Button>
-            </Link>
+            {!isGuest && (
+              <Link href="/profile/orders" className="block">
+                <Button className="w-full rounded-none py-6 bg-primary hover:bg-primary/90 text-primary-foreground">
+                  View My Orders
+                </Button>
+              </Link>
+            )}
+            {isGuest && (
+              <Link href="/products" className="block">
+                <Button className="w-full rounded-none py-6 bg-primary hover:bg-primary/90 text-primary-foreground">
+                  Explore Products
+                </Button>
+              </Link>
+            )}
           </div>
         </div>
       </div>

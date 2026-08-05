@@ -19,7 +19,7 @@ export const authConfig = {
         return false; // Redirect unauthenticated or non-admin users to login page
       }
 
-      if (isOnProfile || isOnCheckout) {
+      if (isOnProfile) {
         if (isLoggedIn) return true;
         return false;
       }

@@ -21,8 +21,13 @@ export function Navbar({ categories }: { categories: Category[] }) {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
+  const [mounted, setMounted] = useState(false);
   const pathname = usePathname();
   const { totalItems } = useCart();
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -156,7 +161,7 @@ export function Navbar({ categories }: { categories: Category[] }) {
               </Link>
               <Link href="/cart" className="p-2 relative hover:text-primary transition-colors group">
                 <ShoppingBag className="h-5 w-5" />
-                {itemCount > 0 && (
+                {mounted && itemCount > 0 && (
                   <span className={cn(
                     "absolute -top-1 -right-1 min-w-[18px] h-[18px] flex items-center justify-center rounded-full text-[10px] font-bold transition-transform group-hover:scale-110 px-1 bg-primary text-white"
                   )}>
