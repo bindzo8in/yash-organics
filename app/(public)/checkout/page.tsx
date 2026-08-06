@@ -36,6 +36,8 @@ export default function CheckoutPage() {
 
   useEffect(() => {
     setIsMounted(true);
+    // Scroll to top on mount — fixes scroll position persisting from previous page on mobile
+    window.scrollTo(0, 0);
   }, []);
 
   const selectedAddress = useMemo(() => 
