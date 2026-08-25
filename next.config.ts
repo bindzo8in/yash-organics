@@ -24,7 +24,6 @@ const nextConfig: NextConfig = {
       }
     ],
   },
-  allowedDevOrigins: ['https://ipad-trident-tropical.ngrok-free.dev/']
 };
 
 export default nextConfig;

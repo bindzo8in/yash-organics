@@ -15,6 +15,29 @@ export function ProductGallery({ images, name }: ProductGalleryProps) {
   const [zoomPosition, setZoomPosition] = useState({ x: 0, y: 0 });
   const [isHovered, setIsHovered] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+  const touchStartX = useRef<number | null>(null);
+
+  const handleTouchStart = (e: React.TouchEvent<HTMLDivElement>) => {
+    touchStartX.current = e.touches[0]?.clientX ?? null;
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent<HTMLDivElement>) => {
+    if (touchStartX.current === null) return;
+
+    const touchEndX = e.changedTouches[0]?.clientX;
+    if (touchEndX === undefined) return;
+
+    const swipeDistance = touchEndX - touchStartX.current;
+    if (Math.abs(swipeDistance) >= 50) {
+      setSelectedImage((currentImage) =>
+        swipeDistance < 0
+          ? (currentImage + 1) % images.length
+          : (currentImage - 1 + images.length) % images.length
+      );
+    }
+
+    touchStartX.current = null;
+  };
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!containerRef.current) return;
@@ -48,6 +71,7 @@ export function ProductGallery({ images, name }: ProductGalleryProps) {
                 src={img}
                 alt={`${name} thumbnail ${index + 1}`}
                 fill
+                sizes="80px"
                 className="object-contain p-1"
               />
             </button>
@@ -61,7 +85,9 @@ export function ProductGallery({ images, name }: ProductGalleryProps) {
         onMouseMove={handleMouseMove}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
-        className="relative flex-1 aspect-square bg-white overflow-hidden border border-border/10 cursor-zoom-in"
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
+        className="relative flex-1 aspect-square touch-pan-y bg-white overflow-hidden border border-border/10 cursor-zoom-in"
       >
         <AnimatePresence mode="wait">
           <motion.div
@@ -77,6 +103,7 @@ export function ProductGallery({ images, name }: ProductGalleryProps) {
               src={images[selectedImage]}
               alt={name}
               fill
+              sizes="(min-width: 1024px) calc(100vw - 104px), 100vw"
               className={cn(
                 "object-contain p-4 transition-opacity duration-300",
                 isHovered ? "opacity-0" : "opacity-100"
