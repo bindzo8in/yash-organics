@@ -13,6 +13,7 @@ const heroSlideSchema = z.object({
   ctaText: z.string().default("Shop Now"),
   order: z.number().default(0),
   isActive: z.boolean().default(true),
+  hasContent: z.boolean().default(false),
 });
 
 export type HeroSlideState = {
@@ -31,6 +32,7 @@ export async function createHeroSlide(prevState: any, formData: FormData): Promi
     ctaText: (formData.get("ctaText") as string) || "Shop Now",
     order: Number(formData.get("order")) || 0,
     isActive: formData.get("isActive") === "true",
+    hasContent: formData.get("hasContent") === "true",
   });
 
   if (!validatedFields.success) {
@@ -64,6 +66,7 @@ export async function updateHeroSlide(id: string, prevState: any, formData: Form
     ctaText: (formData.get("ctaText") as string) || "Shop Now",
     order: Number(formData.get("order")) || 0,
     isActive: formData.get("isActive") === "true",
+    hasContent: formData.get("hasContent") === "true",
   });
 
   if (!validatedFields.success) {

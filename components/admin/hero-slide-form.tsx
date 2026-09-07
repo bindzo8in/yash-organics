@@ -34,6 +34,7 @@ const formSchema = z.object({
   ctaText: z.string().min(1, "CTA Text is required"),
   order: z.coerce.number(),
   isActive: z.string(),
+  hasContent: z.string(),
 });
 
 type HeroSlideFormValues = z.infer<typeof formSchema>;
@@ -65,6 +66,7 @@ export function HeroSlideForm({ initialData, onSuccess }: HeroSlideFormProps) {
     defaultValues: initialData ? {
       ...initialData,
       isActive: initialData.isActive ? "true" : "false",
+      hasContent: initialData.hasContent ? "true" : "false",
     } : {
       title: "",
       subtitle: "",
@@ -74,6 +76,7 @@ export function HeroSlideForm({ initialData, onSuccess }: HeroSlideFormProps) {
       ctaText: "Shop Now",
       order: 0,
       isActive: "true",
+      hasContent: "false",
     },
   });
 
@@ -195,6 +198,21 @@ export function HeroSlideForm({ initialData, onSuccess }: HeroSlideFormProps) {
                   <SelectContent>
                     <SelectItem value="true">Active</SelectItem>
                     <SelectItem value="false">Inactive</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Text Display</label>
+                <Select
+                  onValueChange={(val) => setValue("hasContent", val)}
+                  defaultValue={initialData?.hasContent ? "true" : "false"}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select display type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="false">Show Normally</SelectItem>
+                    <SelectItem value="true">Screen Reader Only</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

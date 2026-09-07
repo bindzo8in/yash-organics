@@ -53,7 +53,7 @@ export function HeroSlider({ slides: dbSlides }: HeroSliderProps) {
   if (!slides.length) return null;
 
   return (
-    <section className="relative h-screen min-h-[700px] w-full overflow-hidden bg-background">
+    <section className="relative mt-[72px] md:mt-0 aspect-video md:aspect-auto md:h-screen md:min-h-[700px] w-full overflow-hidden bg-background">
       <AnimatePresence mode="wait">
         <motion.div
           key={current}
@@ -63,16 +63,30 @@ export function HeroSlider({ slides: dbSlides }: HeroSliderProps) {
           transition={{ duration: 1.2, ease: "easeInOut" }}
           className="absolute inset-0"
         >
+          {/* Blurred background to cover extra space on desktop */}
+          <Image
+            src={getImageUrl(slides[current].image)}
+            alt=""
+            fill
+            className="hidden md:block object-cover blur-3xl opacity-60 scale-105"
+            priority
+          />
+          {/* Main foreground image */}
           <Image
             src={getImageUrl(slides[current].image)}
             alt={slides[current].title}
             fill
-            className="object-cover scale-105"
+            className="object-contain"
             priority
           />
           {/* Enhanced Gradient Overlay for Text Visibility */}
-          <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/30 to-transparent z-[1]" />
-          <div className="absolute inset-0 bg-black/10 backdrop-blur-[1px]" />
+          {slides[current].hasContent ? null : (
+            <>
+              <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/30 to-transparent z-[1]" />
+              <div className="absolute inset-0 bg-black/10 backdrop-blur-[1px]" />
+            </>
+          )}
+
         </motion.div>
       </AnimatePresence>
 
@@ -85,12 +99,12 @@ export function HeroSlider({ slides: dbSlides }: HeroSliderProps) {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -30 }}
               transition={{ duration: 0.8, delay: 0.2 }}
-              className="space-y-8"
+              className={`space-y-8 ${slides[current].hasContent ? 'sr-only' : ''}`}
             >
               <span className={`text-xs uppercase tracking-[0.4em] block font-bold ${slides[current].color || 'text-emerald-400'}`}>
                 {slides[current].subtitle}
               </span>
-              <h1 className="text-4xl sm:text-5xl md:text-8xl font-serif leading-[1.1] text-white drop-shadow-sm">
+              <h1 className="text-4xl sm:text-5xl md:text-8xl  leading-[1.1] text-white drop-shadow-sm">
                 {slides[current].title.split(" ").map((word: string, i: number) => (
                   <span key={i} className={i % 3 === 2 ? "italic block md:inline" : ""}>
                     {word}{" "}
