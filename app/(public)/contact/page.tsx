@@ -6,6 +6,8 @@ export const metadata: Metadata = {
   description: "Get in touch with the Yash Organics team for any inquiries or support.",
 };
 
+export const dynamic = "force-dynamic";
+
 export default function ContactPage() {
   return (
     <div className="bg-[#FDFBF7] pt-48 pb-20 px-6">

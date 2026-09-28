@@ -11,6 +11,8 @@ import { PriceDisplay } from "@/components/shared/price-display";
 import { cn } from "@/lib/utils";
 import { OrderTimeline } from "@/components/shared/order-timeline";
 
+export const dynamic = "force-dynamic";
+
 interface PageProps {
   params: Promise<{ id: string }>;
 }

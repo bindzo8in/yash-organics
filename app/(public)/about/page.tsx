@@ -6,6 +6,8 @@ export const metadata: Metadata = {
   description: "Learn about the story behind Yash Organics and our commitment to pure, natural ingredients.",
 };
 
+export const dynamic = "force-dynamic";
+
 export default function AboutPage() {
   return (
     <div className="pt-32 pb-20 px-6">
