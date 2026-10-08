@@ -53,7 +53,7 @@ export function HeroSlider({ slides: dbSlides }: HeroSliderProps) {
   if (!slides.length) return null;
 
   return (
-    <section className="relative mt-[72px] md:mt-0 aspect-video md:aspect-auto md:h-screen md:min-h-[700px] w-full overflow-hidden bg-background">
+    <section className="relative mt-[72px] lg:mt-0 aspect-video lg:aspect-auto lg:h-screen lg:min-h-[700px] w-full overflow-hidden bg-background">
       <AnimatePresence mode="wait">
         <motion.div
           key={current}
@@ -68,7 +68,7 @@ export function HeroSlider({ slides: dbSlides }: HeroSliderProps) {
             src={getImageUrl(slides[current].image)}
             alt=""
             fill
-            className="hidden md:block object-cover blur-3xl opacity-60 scale-105"
+            className="hidden lg:block object-cover blur-3xl opacity-60 scale-105"
             priority
           />
           {/* Main foreground image */}
@@ -126,7 +126,7 @@ export function HeroSlider({ slides: dbSlides }: HeroSliderProps) {
       </div>
 
       {/* Navigation Controls */}
-      <div className="absolute bottom-12 left-6 right-6 md:left-auto md:right-12 z-20 flex items-center justify-between md:justify-end gap-6">
+      <div className="absolute bottom-4 left-6 right-6 lg:bottom-12 lg:left-auto lg:right-12 z-20 flex items-center justify-between lg:justify-end gap-6">
         <div className="flex gap-2">
           {slides.map((_, i) => (
             <button
