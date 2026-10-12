@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ShoppingBag, Minus, Plus, Check, Zap } from "lucide-react";
+import { ShoppingBag, Minus, Plus, Check, Zap, Star } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
@@ -132,16 +132,64 @@ export function ProductInfo({ product }: ProductInfoProps) {
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-serif leading-[1.1] text-foreground tracking-tight">
               {product.name}
             </h1>
-            <div className="flex items-center gap-4">
+
+            {/* Review & Rating Bar */}
+            <div className="flex items-center gap-3">
+              {product.reviewCount && product.reviewCount > 0 ? (
+                <a 
+                  href="#customer-reviews" 
+                  className="inline-flex items-center gap-2 group hover:opacity-80 transition-opacity"
+                >
+                  <div className="flex items-center gap-0.5 text-amber-400">
+                    {[...Array(5)].map((_, i) => (
+                      <Star 
+                        key={i} 
+                        className={cn(
+                          "w-3.5 h-3.5", 
+                          i < Math.floor(product.rating || 5) 
+                            ? "fill-amber-400 text-amber-400" 
+                            : "text-amber-200 fill-amber-100/40"
+                        )} 
+                      />
+                    ))}
+                  </div>
+                  <span className="text-xs font-semibold text-foreground">
+                    {(product.rating || 5).toFixed(1)}
+                  </span>
+                  <span className="text-xs text-muted-foreground group-hover:text-primary transition-colors underline decoration-dotted underline-offset-4">
+                    ({product.reviewCount} {product.reviewCount === 1 ? "review" : "reviews"})
+                  </span>
+                </a>
+              ) : (
+                <a 
+                  href="#customer-reviews"
+                  className="inline-flex items-center gap-2.5 text-xs text-muted-foreground hover:text-primary transition-colors group"
+                >
+                  <div className="flex items-center gap-0.5 text-amber-400/40 group-hover:text-amber-400/70 transition-colors">
+                    {[...Array(5)].map((_, i) => (
+                      <Star key={i} className="w-3.5 h-3.5 stroke-[1.5]" />
+                    ))}
+                  </div>
+                  <span className="font-medium bg-secondary/50 text-secondary-foreground px-2 py-0.5 rounded-sm text-[10px] uppercase tracking-wider">
+                    No reviews yet
+                  </span>
+                  <span className="text-emerald-700 font-semibold group-hover:underline underline-offset-2">
+                    Be the first to review
+                  </span>
+                </a>
+              )}
+            </div>
+
+            <div className="flex items-center gap-4 pt-1">
               <span className="text-3xl font-light text-foreground/90">₹{currentPrice}</span>
-              {currentMRP && currentMRP > currentPrice && (
+              {Boolean(currentMRP && currentMRP > currentPrice) && currentMRP ? (
                 <div className="flex items-center gap-3">
                   <span className="text-xl text-muted-foreground line-through decoration-1">₹{currentMRP}</span>
                   <span className="text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-sm">
                     {discount}% OFF
                   </span>
                 </div>
-              )}
+              ) : null}
             </div>
           </div>
 
@@ -152,14 +200,23 @@ export function ProductInfo({ product }: ProductInfoProps) {
 
         {/* Quick Features / Key Ingredients */}
         {product.ingredients && (
-          <div className="space-y-4 pt-2">
-            <span className="text-[10px] uppercase tracking-[0.2em] font-bold text-muted-foreground/80">Key Ingredients</span>
+          <div className="space-y-3 pt-2">
+            <span className="text-[10px] uppercase tracking-[0.2em] font-bold text-muted-foreground/80">
+              Key Ingredients
+            </span>
             <div className="flex flex-wrap gap-2">
-              {product.ingredients.split(",").slice(0, 3).map((ing: string, i: number) => (
-                <div key={i} className="px-4 py-2 bg-secondary/30 border border-border/50 text-[11px] font-medium rounded-sm">
-                  {ing.trim()}
-                </div>
-              ))}
+              {product.ingredients
+                .split(",")
+                .map((ing: string) => ing.trim())
+                .filter(Boolean)
+                .map((ing: string, i: number) => (
+                  <div
+                    key={i}
+                    className="px-3.5 py-1.5 bg-secondary/30 border border-border/50 text-[11px] font-medium rounded-sm text-foreground/85 hover:border-primary/40 hover:bg-secondary/50 transition-colors"
+                  >
+                    {ing}
+                  </div>
+                ))}
             </div>
           </div>
         )}

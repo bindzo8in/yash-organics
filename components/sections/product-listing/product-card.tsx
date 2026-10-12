@@ -19,7 +19,7 @@ export function ProductCard({ product, onQuickAdd, onBuyNow }: ProductCardProps)
   const isOutOfStock = product.stock <= 0;
 
   const hasDiscount =
-    product.mrp && product.mrp > product.sellingPrice;
+    Boolean(product.mrp && product.mrp > product.sellingPrice);
 
   const discountPercentage = hasDiscount
     ? Math.round(
@@ -115,7 +115,9 @@ export function ProductCard({ product, onQuickAdd, onBuyNow }: ProductCardProps)
           {typeof product.rating === "number" && (
             <RatingStars
               rating={product.rating}
+              count={product.reviewCount}
               showCount={true}
+              emptyText="New"
               className="shrink-0 scale-90"
             />
           )}

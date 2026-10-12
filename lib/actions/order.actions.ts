@@ -7,7 +7,6 @@ import { revalidatePath } from "next/cache";
 import crypto from "crypto";
 import { checkDeliveryAvailability } from "@/lib/services/delivery.service";
 import { sendOrderConfirmationEmail, sendAdminOrderNotificationEmail } from "@/lib/mail";
-import { clearDbCart } from "./cart.actions";
 
 export async function createOrder(data: {
   addressId: string;

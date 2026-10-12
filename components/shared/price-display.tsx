@@ -13,7 +13,7 @@ export function PriceDisplay({
   className,
   currency = "₹",
 }: PriceDisplayProps) {
-  const hasDiscount = compareAtPrice && compareAtPrice > price;
+  const hasDiscount = Boolean(compareAtPrice && compareAtPrice > price);
 
   return (
     <div className={cn("flex items-baseline gap-2", className)}>
@@ -21,12 +21,12 @@ export function PriceDisplay({
         {currency}
         {price.toLocaleString()}
       </span>
-      {hasDiscount && (
+      {hasDiscount && compareAtPrice ? (
         <span className="text-sm text-muted-foreground line-through decoration-muted-foreground/50 font-medium">
           {currency}
           {compareAtPrice.toLocaleString()}
         </span>
-      )}
+      ) : null}
     </div>
   );
 }

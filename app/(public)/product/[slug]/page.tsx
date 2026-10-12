@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import prisma from "@/lib/prisma";
 import { ProductInfo } from "@/components/shop/product-info";
 import { ProductGallery } from "@/components/shop/product-gallery";
+import { ProductReviews } from "@/components/shop/product-reviews";
 import { getImageUrl } from "@/lib/cloudinary-utils";
 
 export const dynamic = 'force-dynamic';
@@ -144,7 +145,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
 
           {/* 03. Pure Ingredients */}
           {product.ingredients && (
-            <section className="pb-24">
+            <section className="pb-12">
               <div className="flex flex-col items-center text-center space-y-16">
                 <div className="space-y-4">
                   <span className="text-[10px] uppercase tracking-[0.3em] font-bold text-primary/40">Composition</span>
@@ -167,6 +168,9 @@ export default async function ProductPage({ params }: ProductPageProps) {
             </section>
           )}
         </div>
+
+        {/* 04. Customer Reviews Section */}
+        <ProductReviews productId={product.id} productName={product.name} />
       </div>
     </div>
   );
